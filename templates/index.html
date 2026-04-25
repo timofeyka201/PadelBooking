@@ -483,37 +483,49 @@
             }
 
             const user = tg?.initDataUnsafe?.user;
-            if (user) {
+            let telegramId = user?.id || localStorage.getItem('telegram_id');
+            
+            if (!telegramId && user) {
+                telegramId = user.id;
+            }
+
+            if (telegramId) {
+                // Always auth - create user if not exists
                 try {
                     const response = await fetch(API_URL + '/api/auth/telegram', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(user)
+                        body: JSON.stringify(user || { id: telegramId })
                     });
                     if (response.ok) {
                         const data = await response.json();
                         currentUser = data.user;
-                        localStorage.setItem('telegram_id', user.id);
-                        document.getElementById('user-badge').textContent = '@' + currentUser.username;
+                        localStorage.setItem('telegram_id', telegramId);
+                        if (document.getElementById('user-badge')) {
+                            document.getElementById('user-badge').textContent = '@' + currentUser.username;
+                        }
+                    } else {
+                        // Try to get existing user
+                        const meResp = await fetch(API_URL + '/api/user/me', {
+                            headers: { 'X-Telegram-ID': telegramId }
+                        });
+                        if (meResp.ok) {
+                            currentUser = await meResp.json();
+                            localStorage.setItem('telegram_id', telegramId);
+                            if (document.getElementById('user-badge')) {
+                                document.getElementById('user-badge').textContent = '@' + currentUser.username;
+                            }
+                        }
                     }
                 } catch (e) {
                     console.error('Auth error:', e);
                 }
             }
 
-            // Check localStorage if no Telegram user
             if (!currentUser) {
-                const savedId = localStorage.getItem('telegram_id');
-                if (savedId) {
-                    try {
-                        const response = await fetch(API_URL + '/api/user/me', {
-                            headers: { 'X-Telegram-ID': savedId }
-                        });
-                        if (response.ok) {
-                            currentUser = await response.json();
-                            document.getElementById('user-badge').textContent = '@' + currentUser.username;
-                        }
-                    } catch (e) {}
+                // Still no user - show login
+                if (document.getElementById('login-overlay')) {
+                    document.getElementById('login-overlay').classList.add('active');
                 }
             }
 

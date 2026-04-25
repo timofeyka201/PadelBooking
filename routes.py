@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, redirect, url_for, session, Response
+from flask import render_template, request, jsonify, redirect, url_for, session
 from app import app, db, User, Game, GamePlayer
 from flask_login import login_user, logout_user, current_user, login_required
 from functools import wraps
@@ -248,12 +248,4 @@ def server_error(e):
 
 @app.route('/favicon.ico')
 def favicon():
-    return '', 204
-
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    from flask import send_from_directory
-    from pathlib import Path
-    static_dir = Path(__file__).parent / 'static'
-    return send_from_directory(static_dir, filename)
+    return redirect('https://telegram.org/img/t_logo.png', 307)

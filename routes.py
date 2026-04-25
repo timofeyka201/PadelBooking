@@ -1,10 +1,5 @@
-from flask import render_template, request, jsonify, redirect, url_for, session
+from flask import render_template, request, jsonify
 from app import app, db, User, Game, GamePlayer
-from flask_login import login_user, logout_user, current_user, login_required
-from functools import wraps
-import hashlib
-import hmac
-import time
 from datetime import datetime
 
 
@@ -30,32 +25,30 @@ def login():
 
 @app.route('/api/auth/telegram', methods=['POST'])
 def telegram_auth():
-    data = request.get_json()
+    try:
+        data = request.get_json()
+        telegram_id = str(data.get('id', ''))
+        username = data.get('username', 'Unknown')
+        first_name = data.get('first_name', '')
 
-    if not verify_telegram_data(data):
-        return jsonify({'error': 'Invalid signature'}), 400
+        user = User.query.filter_by(telegram_id=telegram_id).first()
 
-    telegram_id = str(data.get('id', ''))
-    username = data.get('username', 'Unknown')
-    first_name = data.get('first_name', '')
+        if not user:
+            user = User(
+                telegram_id=telegram_id,
+                username=username,
+                first_name=first_name
+            )
+            db.session.add(user)
+            db.session.commit()
 
-    user = User.query.filter_by(telegram_id=telegram_id).first()
-
-    if not user:
-        user = User(
-            telegram_id=telegram_id,
-            username=username,
-            first_name=first_name
-        )
-        db.session.add(user)
-        db.session.commit()
-
-    login_user(user)
-    return jsonify({'success': True, 'user': {
-        'id': user.id,
-        'username': user.username,
-        'first_name': user.first_name
-    }})
+        return jsonify({'success': True, 'user': {
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name
+        }})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/auth/logout', methods=['POST'])

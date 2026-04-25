@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.9"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/favicon.ico",
+      "dest": "/app.py"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/app.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/app.py"
+    }
+  ]
+}

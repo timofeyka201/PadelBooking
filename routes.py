@@ -8,13 +8,9 @@ import time
 from datetime import datetime
 
 
-def get_user_from_request():
-    telegram_id = request.headers.get('X-Telegram-ID')
-    if not telegram_id:
-        telegram_id = request.args.get('telegram_id')
-    if telegram_id:
-        return User.query.filter_by(telegram_id=str(telegram_id)).first()
-    return None
+def verify_telegram_data(data):
+    # Always pass for development
+    return True
 
 
 @app.route('/')

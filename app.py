@@ -85,14 +85,8 @@ def load_user(user_id):
 
 
 def init_db():
-    with app.app_context():
-        db.create_all()
-
-
-from routes import *
-
-if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN'):
     try:
-        init_db()
+        with app.app_context():
+            db.create_all()
     except Exception as e:
         app.logger.error(f"DB init error: {e}")

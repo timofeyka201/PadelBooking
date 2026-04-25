@@ -133,8 +133,12 @@ async function loginWithTelegram() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(user)
                 });
+                const data = await response.json();
                 if (response.ok) {
+                    localStorage.setItem('telegram_id', user.id);
                     window.location.href = '/';
+                } else {
+                    alert(data.error || 'Ошибка входа');
                 }
             } catch (e) {
                 console.error('Login error:', e);

@@ -67,22 +67,62 @@
 {% block extra_scripts %}
 <script>
 let currentUser = null;
-let startPicker, endPicker;
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await checkAuth();
+function getAuthHeaders() {
+    const telegramId = localStorage.getItem('telegram_id');
+    return telegramId ? { 'X-Telegram-ID': telegramId } : {};
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
     loadGames();
+    
+    const createBtn = document.getElementById('btn-create');
+    if (createBtn) {
+        createBtn.addEventListener('click', showCreateModal);
+    }
 
-    startPicker = flatpickr("#game-start", {
+    const modalOverlay = document.getElementById('create-modal');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeCreateModal();
+        });
+    }
+
+    const startPicker = flatpickr("#game-start", {
         locale: "ru",
         enableTime: true,
         minDate: "today",
         dateFormat: "d.m.Y H:i",
-        onChange: function(selectedDates, dateStr, instance) {
+        onChange: (selectedDates) => {
             if (selectedDates[0]) {
-                const end = new Date(selectedDates[0].getTime() + 60 * 60 * 1000);
-                endPicker.setDate(end);
+                endPicker.set('minDate', selectedDates[0]);
             }
+        }
+    });
+
+    endPicker = flatpickr("#game-end", {
+        locale: "ru",
+        enableTime: true,
+        minDate: "today",
+        dateFormat: "d.m.Y H:i"
+    });
+});
+
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/user/me', {
+            headers: getAuthHeaders()
+        });
+        if (response.ok) {
+            currentUser = await response.json();
+            document.getElementById('user-info').style.display = 'flex';
+            document.getElementById('username').textContent = currentUser.username;
+        }
+    } catch (e) {
+        console.log('Not authenticated');
+    }
+}
         }
     });
 
@@ -109,7 +149,9 @@ async function checkAuth() {
 
 async function loadGames() {
     try {
-        const response = await fetch('/api/games');
+        const response = await fetch('/api/games', {
+            headers: getAuthHeaders()
+        });
         const games = await response.json();
         renderGames(games);
     } catch (e) {
@@ -181,11 +223,11 @@ async function createGame(e) {
     };
 
     try {
-        const response = await fetch('/api/games', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+const response = await fetch('/api/games', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(data)
+});
 
         if (response.status === 400) {
             const error = await response.json();
@@ -206,7 +248,9 @@ async function createGame(e) {
 
 async function showGameDetail(gameId) {
     try {
-        const response = await fetch(`/api/games/${gameId}`);
+        const response = await fetch(`/api/games/${gameId}`, {
+            headers: getAuthHeaders()
+        });
         const game = await response.json();
         const isParticipant = game.players.some(p => p.id === currentUser?.id);
 
@@ -251,7 +295,7 @@ function closeDetailModal() {
 
 async function joinGame(gameId) {
     try {
-        const response = await fetch(`/api/games/${gameId}/join`, { method: 'POST' });
+        const response = await fetch(`/api/games/${gameId}/join`, { method: 'POST', headers: getAuthHeaders() });
         if (response.status === 400) {
             const error = await response.json();
             alert(error.error);
@@ -266,7 +310,7 @@ async function joinGame(gameId) {
 
 async function leaveGame(gameId) {
     try {
-        await fetch(`/api/games/${gameId}/leave`, { method: 'POST' });
+        await fetch(`/api/games/${gameId}/leave`, { method: 'POST', headers: getAuthHeaders() });
         closeDetailModal();
         loadGames();
     } catch (e) {
@@ -277,7 +321,7 @@ async function leaveGame(gameId) {
 async function deleteGame(gameId) {
     if (confirm('Удалить эту игру?')) {
         try {
-            await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
+            await fetch(`/api/games/${gameId}`, { method: 'DELETE', headers: getAuthHeaders() });
             closeDetailModal();
             loadGames();
         } catch (e) {

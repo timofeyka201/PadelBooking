@@ -8,9 +8,13 @@ import time
 from datetime import datetime
 
 
-def verify_telegram_data(data):
-    """Verify Telegram Web App data signature"""
-    return True
+def get_user_from_request():
+    telegram_id = request.headers.get('X-Telegram-ID')
+    if not telegram_id:
+        telegram_id = request.args.get('telegram_id')
+    if telegram_id:
+        return User.query.filter_by(telegram_id=str(telegram_id)).first()
+    return None
 
 
 @app.route('/')
@@ -59,21 +63,28 @@ def telegram_auth():
 
 
 @app.route('/api/auth/logout', methods=['POST'])
-@login_required
 def logout():
-    logout_user()
     return jsonify({'success': True})
 
 
 @app.route('/api/user/me')
-@login_required
 def get_current_user():
+    telegram_id = request.headers.get('X-Telegram-ID')
+    if not telegram_id:
+        telegram_id = request.args.get('telegram_id')
+    if not telegram_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user = User.query.filter_by(telegram_id=str(telegram_id)).first()
+    if not user:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
     return jsonify({
-        'id': current_user.id,
-        'username': current_user.username,
-        'first_name': current_user.first_name,
-        'has_active_game': current_user.has_active_game(),
-        'has_created_game': current_user.has_created_game()
+        'id': user.id,
+        'username': user.username,
+        'first_name': user.first_name,
+        'has_active_game': user.has_active_game(),
+        'has_created_game': user.has_created_game()
     })
 
 
@@ -106,8 +117,11 @@ def get_games():
 
 
 @app.route('/api/games', methods=['POST'])
-@login_required
 def create_game():
+    current_user = get_user_from_request()
+    if not current_user:
+        return jsonify({'error': 'Not authenticated'}), 401
+
     data = request.get_json()
 
     if current_user.has_created_game():
@@ -158,8 +172,11 @@ def get_game(game_id):
 
 
 @app.route('/api/games/<int:game_id>/join', methods=['POST'])
-@login_required
 def join_game(game_id):
+    current_user = get_user_from_request()
+    if not current_user:
+        return jsonify({'error': 'Not authenticated'}), 401
+
     game = Game.query.get_or_404(game_id)
 
     if game.is_full():
@@ -181,8 +198,11 @@ def join_game(game_id):
 
 
 @app.route('/api/games/<int:game_id>/leave', methods=['POST'])
-@login_required
 def leave_game(game_id):
+    current_user = get_user_from_request()
+    if not current_user:
+        return jsonify({'error': 'Not authenticated'}), 401
+
     player = GamePlayer.query.filter_by(user_id=current_user.id, game_id=game_id).first()
     if not player:
         return jsonify({'error': 'Вы не участник этой игры'}), 400
@@ -197,8 +217,11 @@ def leave_game(game_id):
 
 
 @app.route('/api/games/<int:game_id>', methods=['DELETE'])
-@login_required
 def delete_game(game_id):
+    current_user = get_user_from_request()
+    if not current_user:
+        return jsonify({'error': 'Not authenticated'}), 401
+
     game = Game.query.get_or_404(game_id)
 
     if game.creator_id != current_user.id:

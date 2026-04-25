@@ -477,52 +477,62 @@
         }
 
         async function init() {
+            console.log('=== INIT STARTED ===');
+            console.log('window.Telegram:', window.Telegram);
+            
             if (tg) {
                 tg.ready();
                 tg.expand();
             }
 
             let user = tg?.initDataUnsafe?.user;
+            console.log('initDataUnsafe user:', user);
+            
             let telegramId = user?.id || localStorage.getItem('telegram_id');
+            console.log('After check - telegramId:', telegramId);
             
             // If no user from Telegram and no saved id, try fallback from URL
-            if (!telegramId && !user) {
+            if (!telegramId) {
                 const urlParams = new URLSearchParams(window.location.search);
                 telegramId = urlParams.get('user_id');
+                console.log('From URL user_id:', telegramId);
             }
 
-            console.log('User from TG:', user, 'Saved ID:', telegramId);
-
-            if (!telegramId && user) {
-                telegramId = user.id;
-            }
+            console.log('Final telegramId:', telegramId);
 
             if (telegramId) {
                 try {
-                    const authData = user ? { id: telegramId, username: user.username || 'user', first_name: user.first_name || '' } : { id: String(telegramId) };
+                    const authData = { id: String(telegramId), username: 'tg_user', first_name: 'Telegram' };
+                    console.log('Sending auth:', authData);
                     
                     const response = await fetch(API_URL + '/api/auth/telegram', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(authData)
                     });
+                    console.log('Auth response status:', response.status);
                     
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('Auth success:', data);
                         currentUser = data.user;
-                        localStorage.setItem('telegram_id', telegramId);
+                        localStorage.setItem('telegram_id', String(telegramId));
                         if (document.getElementById('user-badge')) {
                             document.getElementById('user-badge').textContent = '@' + currentUser.username;
                         }
                         console.log('Logged in as:', currentUser.username);
                     } else {
                         const err = await response.json();
-                        console.log('Auth error:', err);
+                        console.log('Auth error response:', err);
                     }
                 } catch (e) {
-                    console.error('Auth error:', e);
+                    console.error('Auth exception:', e);
                 }
+            } else {
+                console.log('No telegramId found - cannot auth');
             }
+            
+            console.log('=== INIT DONE ===');
 
             await loadGames();
 

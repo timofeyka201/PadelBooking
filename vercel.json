@@ -3,20 +3,17 @@
   "builds": [
     {
       "src": "app.py",
-      "use": "@vercel/python",
-      "config": {
-        "runtime": "python3.9"
-      }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/favicon.ico",
-      "dest": "/app.py"
+      "dest": "/favicon.ico"
     },
     {
       "src": "/static/(.*)",
-      "dest": "/app.py"
+      "dest": "/static/$1"
     },
     {
       "src": "/(.*)",

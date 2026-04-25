@@ -244,8 +244,3 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return jsonify({'error': 'Server error'}), 500
-
-
-@app.route('/favicon.ico')
-def favicon():
-    return redirect('https://telegram.org/img/t_logo.png', 307)

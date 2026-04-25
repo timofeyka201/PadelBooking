@@ -79,9 +79,13 @@ def get_current_user():
     })
 
 
+from datetime import datetime, timezone
+
+
 @app.route('/api/games')
 def get_games():
-    games = Game.query.filter(Game.start_time > db.func.now()).order_by(Game.start_time).all()
+    now = datetime.now(timezone.utc)
+    games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
     return jsonify([{
         'id': g.id,
         'title': g.title,
@@ -240,3 +244,8 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return jsonify({'error': 'Server error'}), 500
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204

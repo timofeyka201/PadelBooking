@@ -6,18 +6,25 @@
       "use": "@vercel/python"
     },
     {
-      "src": "public/**",
+      "src": "css/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "js/**", 
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
+      "src": "/favicon.ico"
     },
     {
-      "src": "/static/(.*)",
-      "dest": "/public/static/$1"
+      "src": "/css/(.*)",
+      "dest": "/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
     },
     {
       "src": "/(.*)",

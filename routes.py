@@ -5,6 +5,7 @@ from functools import wraps
 import hashlib
 import hmac
 import time
+from datetime import datetime
 
 
 def verify_telegram_data(data):
@@ -231,4 +232,11 @@ def my_games():
     })
 
 
-from datetime import datetime
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({'error': 'Not found'}), 404
+
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({'error': 'Server error'}), 500

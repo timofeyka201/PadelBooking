@@ -1,0 +1,711 @@
+"""
+Telegram Web App для Padel Court
+Этот HTML файл открывается из Telegram бота
+"""
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Padel Court</title>
+    <script src="https://telegram.org/js/telegram-widget.js?21"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-button-color: #10B981;
+            --tg-theme-button-text-color: #ffffff;
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --danger: #DC2626;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-400: #9CA3AF;
+            --gray-600: #6B7280;
+            --gray-800: #374151;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-100);
+            color: var(--gray-900);
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .header {
+            background: var(--tg-theme-bg-color);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #064E3B;
+        }
+
+        .logo svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .user-badge {
+            background: var(--primary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+        }
+
+        .create-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .game-card {
+            background: var(--tg-theme-bg-color);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--gray-200);
+        }
+
+        .game-card:active {
+            transform: scale(0.98);
+        }
+
+        .game-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .game-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .game-status {
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .status-open {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-full {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .game-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        .game-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .game-description {
+            font-size: 13px;
+            color: var(--gray-600);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .game-creator {
+            font-size: 12px;
+            color: var(--gray-400);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-400);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--tg-theme-bg-color);
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--gray-400);
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-600);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: none;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        .btn-danger {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+
+        .detail-teams {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .team-box {
+            background: var(--gray-50);
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .team-box h4 {
+            font-size: 12px;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .team-box ul {
+            list-style: none;
+        }
+
+        .team-box li {
+            font-size: 14px;
+            padding: 6px 0;
+            color: var(--gray-800);
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .detail-info {
+            background: var(--gray-50);
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        .detail-info p {
+            font-size: 13px;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gray-900);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 360px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <svg viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" stroke="#10B981" stroke-width="3"/>
+                <circle cx="16" cy="16" r="6" fill="#10B981"/>
+            </svg>
+            Padel Court
+        </div>
+        <div class="user-badge" id="user-badge">Загрузка...</div>
+    </div>
+
+    <div class="container">
+        <button class="create-btn" onclick="showCreateModal()">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
+            </svg>
+            Создать игру
+        </button>
+
+        <h2 class="section-title">Ближайшие игры</h2>
+        <div class="games-list" id="games-list">
+            <div class="empty-state">Загрузка...</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="create-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Новая игра</h3>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <form class="modal-body" onsubmit="createGame(event)">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="game-title" required placeholder="Утренняя игра">
+                </div>
+                <div class="form-group">
+                    <label>Комментарий</label>
+                    <textarea id="game-description" placeholder="Уровень игры, что взять..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Начало</label>
+                        <input type="text" id="game-start" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Конец</label>
+                        <input type="text" id="game-end" required>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="document.querySelector('#create-modal form').requestSubmit()">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="detail-title">Игра</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="detail-content"></div>
+            <div class="modal-footer" id="detail-actions"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+    <script>
+        const API_URL = 'http://localhost:5000';
+        let tg = window.Telegram?.WebApp;
+        let currentUser = null;
+        let startPicker, endPicker;
+        let games = [];
+
+        async function init() {
+            if (tg) {
+                tg.ready();
+                tg.expand();
+            }
+
+            const user = tg?.initDataUnsafe?.user;
+            if (user) {
+                try {
+                    const response = await fetch(API_URL + '/api/auth/telegram', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(user)
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = data.user;
+                        document.getElementById('user-badge').textContent = '@' + currentUser.username;
+                    }
+                } catch (e) {
+                    console.error('Auth error:', e);
+                }
+            }
+
+            await loadGames();
+
+            startPicker = flatpickr("#game-start", {
+                locale: "ru",
+                enableTime: true,
+                minDate: "today",
+                dateFormat: "d.m.Y H:i",
+                onChange: function(selectedDates) {
+                    if (selectedDates[0]) {
+                        const end = new Date(selectedDates[0].getTime() + 60 * 60 * 1000);
+                        endPicker.setDate(end);
+                    }
+                }
+            });
+
+            endPicker = flatpickr("#game-end", {
+                locale: "ru",
+                enableTime: true,
+                minDate: "today",
+                dateFormat: "d.m.Y H:i"
+            });
+        }
+
+        async function loadGames() {
+            try {
+                const response = await fetch(API_URL + '/api/games');
+                games = await response.json();
+                renderGames();
+            } catch (e) {
+                console.error('Load error:', e);
+            }
+        }
+
+        function renderGames() {
+            const container = document.getElementById('games-list');
+            if (games.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет игр. Создайте первую!</div>';
+                return;
+            }
+
+            container.innerHTML = games.map(game => `
+                <div class="game-card" onclick="showDetail(${game.id})">
+                    <div class="game-card-header">
+                        <span class="game-card-title">${escapeHtml(game.title)}</span>
+                        <span class="game-status ${game.is_full ? 'status-full' : 'status-open'}">
+                            ${game.is_full ? 'Заполнено' : 'Открыто'}
+                        </span>
+                    </div>
+                    <div class="game-meta">
+                        <span>📅 ${formatDate(game.start_time)}</span>
+                        <span>👥 ${game.player_count}/4</span>
+                    </div>
+                    ${game.description ? `<div class="game-description">${escapeHtml(game.description)}</div>` : ''}
+                    <div class="game-creator">От ${escapeHtml(game.creator.username)}</div>
+                </div>
+            `).join('');
+        }
+
+        function showCreateModal() {
+            if (!currentUser) {
+                showToast('Войдите через Telegram');
+                return;
+            }
+            document.getElementById('create-modal').classList.add('active');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('create-modal').classList.remove('active');
+        }
+
+        async function createGame(e) {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById('game-title').value,
+                description: document.getElementById('game-description').value,
+                start_time: document.getElementById('game-start').value,
+                end_time: document.getElementById('game-end').value
+            };
+
+            try {
+                const response = await fetch(API_URL + '/api/games', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.status === 400) {
+                    const error = await response.json();
+                    showToast(error.error);
+                    return;
+                }
+
+                closeCreateModal();
+                document.getElementById('game-title').value = '';
+                document.getElementById('game-description').value = '';
+                await loadGames();
+                showToast('Игра создана!');
+            } catch (e) {
+                showToast('Ошибка создания');
+            }
+        }
+
+        async function showDetail(id) {
+            const game = games.find(g => g.id === id);
+            if (!game) return;
+
+            const isParticipant = currentUser && game.players.some(p => p.id === currentUser.id);
+
+            document.getElementById('detail-title').textContent = game.title;
+            document.getElementById('detail-content').innerHTML = `
+                <div class="detail-info">
+                    <p><strong>Время:</strong> ${formatDate(game.start_time)}</p>
+                    <p><strong>Создатель:</strong> @${escapeHtml(game.creator.username)}</p>
+                    ${game.description ? `<p><strong>Комментарий:</strong> ${escapeHtml(game.description)}</p>` : ''}
+                </div>
+                <div class="detail-teams">
+                    <div class="team-box">
+                        <h4>Команда A</h4>
+                        <ul>
+                            ${game.players.filter(p => p.team === 'team_a').map(p => `<li>@${escapeHtml(p.username)}</li>`).join('') || '<li>—</li>'}
+                        </ul>
+                    </div>
+                    <div class="team-box">
+                        <h4>Команда B</h4>
+                        <ul>
+                            ${game.players.filter(p => p.team === 'team_b').map(p => `<li>@${escapeHtml(p.username)}</li>`).join('') || '<li>—</li>'}
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            let actions = '';
+            if (!isParticipant && !game.is_full && currentUser) {
+                actions = `<button class="btn btn-primary" onclick="joinGame(${id})">Присоединиться</button>`;
+            } else if (isParticipant && game.creator.id !== currentUser?.id) {
+                actions = `<button class="btn btn-danger" onclick="leaveGame(${id})">Покинуть</button>`;
+            } else if (game.creator.id === currentUser?.id) {
+                actions = `<button class="btn btn-danger" onclick="deleteGame(${id})">Удалить</button>`;
+            }
+            document.getElementById('detail-actions').innerHTML = actions;
+
+            document.getElementById('detail-modal').classList.add('active');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        async function joinGame(id) {
+            try {
+                const response = await fetch(API_URL + '/api/games/' + id + '/join', { method: 'POST' });
+                if (response.status === 400) {
+                    const error = await response.json();
+                    showToast(error.error);
+                    return;
+                }
+                closeDetailModal();
+                await loadGames();
+                showToast('Вы присоединились!');
+            } catch (e) {
+                showToast('Ошибка');
+            }
+        }
+
+        async function leaveGame(id) {
+            try {
+                await fetch(API_URL + '/api/games/' + id + '/leave', { method: 'POST' });
+                closeDetailModal();
+                await loadGames();
+                showToast('Вы покинули игру');
+            } catch (e) {
+                showToast('Ошибка');
+            }
+        }
+
+        async function deleteGame(id) {
+            if (confirm('Удалить игру?')) {
+                try {
+                    await fetch(API_URL + '/api/games/' + id, { method: 'DELETE' });
+                    closeDetailModal();
+                    await loadGames();
+                    showToast('Игра удалена');
+                } catch (e) {
+                    showToast('Ошибка');
+                }
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Вход - Padel Court{% endblock %}
+
+{% block extra_head %}
+<style>
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #064E3B 0%, #10B981 100%);
+}
+
+.login-card {
+    background: white;
+    border-radius: 20px;
+    padding: 48px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 400px;
+    width: 100%;
+}
+
+.login-card h1 {
+    color: #064E3B;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.login-card p {
+    color: #6B7280;
+    margin-bottom: 32px;
+}
+
+.telegram-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: #0088CC;
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.telegram-btn:hover {
+    background: #0077B3;
+    transform: translateY(-2px);
+}
+
+.telegram-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.features {
+    margin-top: 32px;
+    text-align: left;
+}
+
+.features h3 {
+    color: #064E3B;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.features li {
+    color: #6B7280;
+    font-size: 14px;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.features li::before {
+    content: "✓";
+    color: #10B981;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="margin-bottom: 16px;">
+            <circle cx="32" cy="32" r="28" stroke="#064E3B" stroke-width="4"/>
+            <circle cx="32" cy="32" r="12" fill="#10B981"/>
+        </svg>
+        <h1>Padel Court</h1>
+        <p>Бронирование корта для игры в падел</p>
+
+        <button class="telegram-btn" onclick="loginWithTelegram()">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+            </svg>
+            Войти через Telegram
+        </button>
+
+        <div class="features">
+            <h3>Возможности:</h3>
+            <ul>
+                <li>Бронирование корта на удобное время</li>
+                <li>Создание игр и приглашение друзей</li>
+                <li>Командная игра 2 на 2</li>
+                <li>Комментарии к бронированию</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loginWithTelegram() {
+    if (window.Telegram.WebApp) {
+        const user = window.Telegram.WebApp.initDataUnsafe?.user;
+        if (user) {
+            try {
+                const response = await fetch('/api/auth/telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                });
+                if (response.ok) {
+                    window.location.href = '/';
+                }
+            } catch (e) {
+                console.error('Login error:', e);
+                alert('Ошибка входа. Попробуйте снова.');
+            }
+        }
+    } else {
+        alert('Для входа используйте Telegram Web App');
+    }
+}
+</script>
+{% endblock %}

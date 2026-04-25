@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Padel Court{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>Ближайшие игры</h1>
+        <button class="btn-primary" onclick="showCreateModal()" id="btn-create">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
+            </svg>
+            Создать игру
+        </button>
+    </div>
+
+    <div class="games-grid" id="games-list">
+        <div class="loading">Загрузка игр...</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="create-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Создать новую игру</h2>
+            <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+        </div>
+        <form class="modal-form" onsubmit="createGame(event)">
+            <div class="form-group">
+                <label for="game-title">Название игры</label>
+                <input type="text" id="game-title" required placeholder="Утренняя игра">
+            </div>
+            <div class="form-group">
+                <label for="game-description">Комментарий</label>
+                <textarea id="game-description" placeholder="Уровень игры, что взять с собой..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="game-start">Начало</label>
+                    <input type="text" id="game-start" required>
+                </div>
+                <div class="form-group">
+                    <label for="game-end">Ко��ец</label>
+                    <input type="text" id="game-end" required>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeCreateModal()">Отмена</button>
+                <button type="submit" class="btn-primary">Создать</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="game-detail-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h2 id="detail-title">Игра</h2>
+            <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="detail-content">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentUser = null;
+let startPicker, endPicker;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+    loadGames();
+
+    startPicker = flatpickr("#game-start", {
+        locale: "ru",
+        enableTime: true,
+        minDate: "today",
+        dateFormat: "d.m.Y H:i",
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates[0]) {
+                const end = new Date(selectedDates[0].getTime() + 60 * 60 * 1000);
+                endPicker.setDate(end);
+            }
+        }
+    });
+
+    endPicker = flatpickr("#game-end", {
+        locale: "ru",
+        enableTime: true,
+        minDate: "today",
+        dateFormat: "d.m.Y H:i"
+    });
+});
+
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/user/me');
+        if (response.ok) {
+            currentUser = await response.json();
+            document.getElementById('user-info').style.display = 'flex';
+            document.getElementById('username').textContent = currentUser.username;
+        }
+    } catch (e) {
+        console.log('Not authenticated');
+    }
+}
+
+async function loadGames() {
+    try {
+        const response = await fetch('/api/games');
+        const games = await response.json();
+        renderGames(games);
+    } catch (e) {
+        console.error('Error loading games:', e);
+    }
+}
+
+function renderGames(games) {
+    const container = document.getElementById('games-list');
+    if (games.length === 0) {
+        container.innerHTML = '<div class="empty-state">Нет предстоящих игр. Создайте первую!</div>';
+        return;
+    }
+
+    container.innerHTML = games.map(game => `
+        <div class="game-card" onclick="showGameDetail(${game.id})">
+            <div class="game-card-header">
+                <h3>${escapeHtml(game.title)}</h3>
+                <span class="badge ${game.is_full ? 'badge-full' : 'badge-open'}">
+                    ${game.is_full ? 'Заполнено' : 'Открыто'}
+                </span>
+            </div>
+            <div class="game-card-meta">
+                <div class="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13z"/>
+                        <path d="M8 3.5v5l3 1.5"/>
+                    </svg>
+                    ${formatDate(game.start_time)}
+                </div>
+                <div class="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M4 4a4 4 0 118 0 4 4 0 01-8 0zm4-3a3 3 0 100 6 3 3 0 000-6z"/>
+                    </svg>
+                    ${game.player_count}/4 игроков
+                </div>
+            </div>
+            ${game.description ? `<p class="game-card-description">${escapeHtml(game.description)}</p>` : ''}
+            <div class="game-card-footer">
+                <span class="creator">От ${escapeHtml(game.creator.username)}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showCreateModal() {
+    if (!currentUser) {
+        alert('Войдите через Telegram для создания игры');
+        return;
+    }
+    if (currentUser.has_created_game) {
+        alert('Вы уже создали активную игру. Нельзя создавать больше одной.');
+        return;
+    }
+    document.getElementById('create-modal').classList.add('active');
+}
+
+function closeCreateModal() {
+    document.getElementById('create-modal').classList.remove('active');
+}
+
+async function createGame(e) {
+    e.preventDefault();
+    const data = {
+        title: document.getElementById('game-title').value,
+        description: document.getElementById('game-description').value,
+        start_time: document.getElementById('game-start').value,
+        end_time: document.getElementById('game-end').value
+    };
+
+    try {
+        const response = await fetch('/api/games', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.status === 400) {
+            const error = await response.json();
+            alert(error.error);
+            return;
+        }
+
+        if (response.ok) {
+            closeCreateModal();
+            loadGames();
+            document.getElementById('game-title').value = '';
+            document.getElementById('game-description').value = '';
+        }
+    } catch (e) {
+        alert('Ошибка создания игры');
+    }
+}
+
+async function showGameDetail(gameId) {
+    try {
+        const response = await fetch(`/api/games/${gameId}`);
+        const game = await response.json();
+        const isParticipant = game.players.some(p => p.id === currentUser?.id);
+
+        document.getElementById('detail-title').textContent = game.title;
+        document.getElementById('detail-content').innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-section">
+                    <h4>Информация</h4>
+                    <p><strong>Время:</strong> ${formatDate(game.start_time)} - ${formatTime(game.end_time)}</p>
+                    <p><strong>Создатель:</strong> ${escapeHtml(game.creator.username)}</p>
+                    <p><strong>Статус:</strong> ${game.status}</p>
+                    ${game.description ? `<p><strong>Комментарий:</strong> ${escapeHtml(game.description)}</p>` : ''}
+                </div>
+                <div class="detail-section">
+                    <h4>Команда A</h4>
+                    <ul class="player-list">
+                        ${game.players.filter(p => p.team === 'team_a').map(p => `<li>${escapeHtml(p.username)}${p.id === game.creator.id ? ' (создатель)' : ''}</li>`).join('') || '<li>Ожидание игроков...</li>'}
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Команда B</h4>
+                    <ul class="player-list">
+                        ${game.players.filter(p => p.team === 'team_b').map(p => `<li>${escapeHtml(p.username)}</li>`).join('') || '<li>Ожидание игроков...</li>'}
+                    </ul>
+                </div>
+            </div>
+            <div class="detail-actions">
+                ${!isParticipant && !game.is_full && currentUser ? `<button class="btn-primary" onclick="joinGame(${gameId})">Присоединиться</button>` : ''}
+                ${isParticipant && game.creator.id !== currentUser?.id ? `<button class="btn-secondary" onclick="leaveGame(${gameId})">Покинуть</button>` : ''}
+                ${game.creator.id === currentUser?.id ? `<button class="btn-danger" onclick="deleteGame(${gameId})">Удалить игру</button>` : ''}
+            </div>
+        `;
+        document.getElementById('game-detail-modal').classList.add('active');
+    } catch (e) {
+        alert('Ошибка загрузки игры');
+    }
+}
+
+function closeDetailModal() {
+    document.getElementById('game-detail-modal').classList.remove('active');
+}
+
+async function joinGame(gameId) {
+    try {
+        const response = await fetch(`/api/games/${gameId}/join`, { method: 'POST' });
+        if (response.status === 400) {
+            const error = await response.json();
+            alert(error.error);
+        } else {
+            closeDetailModal();
+            loadGames();
+        }
+    } catch (e) {
+        alert('Ошибка');
+    }
+}
+
+async function leaveGame(gameId) {
+    try {
+        await fetch(`/api/games/${gameId}/leave`, { method: 'POST' });
+        closeDetailModal();
+        loadGames();
+    } catch (e) {
+        alert('Ошибка');
+    }
+}
+
+async function deleteGame(gameId) {
+    if (confirm('Удалить эту игру?')) {
+        try {
+            await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
+            closeDetailModal();
+            loadGames();
+        } catch (e) {
+            alert('Ошибка');
+        }
+    }
+}
+
+async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.reload();
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatTime(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import logging
-from telegram import Update, KeyboardButton, WebAppInfo
+from telegram import Update, KeyboardButton, WebAppInfo, KeyboardButton, WebAppInfo
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 logging.basicConfig(level=logging.INFO)
@@ -17,13 +17,14 @@ WEBAPP_URL = os.getenv('WEBAPP_URL', 'http://localhost:5000')
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
     await update.message.reply_text(
         "🎾 <b>Padel Court - Бронирование корта</b>\n\n"
-        "Откройте приложение:",
+        "Нажмите кнопку ниже чтобы открыть:",
         parse_mode='HTML',
         reply_markup=KeyboardButton(
-            text="Открыть",
-            web_app=WebAppInfo(f"{WEBAPP_URL}/telegram_app.html")
+            text="🎾 Играть",
+            web_app=WebAppInfo(f"{WEBAPP_URL}/?user_id={user_id}")
         )
     )
 

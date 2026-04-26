@@ -1091,8 +1091,13 @@
             
             try {
                 const response = await fetch(API_URL + '/api/slots?date=' + selectedDate);
-                occupiedSlots = await response.json();
+                if (response.ok) {
+                    occupiedSlots = await response.json();
+                } else {
+                    occupiedSlots = [];
+                }
             } catch (e) {
+                console.error('loadOccupiedSlots error:', e);
                 occupiedSlots = [];
             }
         }

@@ -226,7 +226,6 @@ def get_games():
     try:
         now = datetime.utcnow()
         games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
-        app.logger.error(f"get_games: found {games.__len__()} games")
         
         result = []
         for g in games:
@@ -238,8 +237,6 @@ def get_games():
                     'id': g.id,
                     'title': g.title,
                     'description': g.description or '',
-                    'level': g.level or 'all',
-                    'game_type': g.game_type or 'open',
                     'start_time': start_ts,
                     'end_time': end_ts,
                     'status': g.status,
@@ -252,8 +249,7 @@ def get_games():
                     'players': [{
                         'id': p.player.id,
                         'username': p.player.username,
-                        'team': p.team or 'team_a',
-                        'approved': bool(p.approved)
+                        'team': p.team or 'team_a'
                     } for p in g.players]
                 })
             except Exception as e:
@@ -304,7 +300,7 @@ def create_game():
         db.session.add(game)
         db.session.flush()
         
-        player = GamePlayer(user_id=current_user.id, game_id=game.id, team='creator', approved=True)
+        player = GamePlayer(user_id=current_user.id, game_id=game.id, team='creator')
         db.session.add(player)
         db.session.commit()
 
@@ -324,11 +320,9 @@ def get_game(game_id):
     return jsonify({
         'id': game.id,
         'title': game.title,
-        'description': game.description,
-        'level': getattr(game, 'level', 'all'),
-        'game_type': getattr(game, 'game_type', 'open'),
-        'start_time': game.start_time.isoformat(),
-        'end_time': game.end_time.isoformat(),
+        'description': game.description or '',
+        'start_time': game.start_time.strftime('%Y-%m-%dT%H:%M:%S'),
+        'end_time': game.end_time.strftime('%Y-%m-%dT%H:%M:%S'),
         'status': game.status,
         'creator': {
             'id': game.creator.id,
@@ -339,8 +333,7 @@ def get_game(game_id):
         'players': [{
             'id': p.player.id,
             'username': p.player.username,
-            'team': p.team,
-            'approved': getattr(p, 'approved', True)
+            'team': p.team or 'team_a'
         } for p in game.players]
     })
 
@@ -358,37 +351,22 @@ def join_game(game_id):
 
     existing = GamePlayer.query.filter_by(user_id=current_user.id, game_id=game_id).first()
     if existing:
-        if game.game_type == 'closed' and not existing.approved:
-            return jsonify({'error': 'Ожидайте подтверждения от создателя'}), 400
         return jsonify({'error': 'Вы уже участвуете в этой игре'}), 400
 
-    if current_user.has_active_game():
-        return jsonify({'error': 'Вы уже участвуете в активной игре. Покинете текущую игру, чтобы присоединиться к новой.'}), 400
+    try:
+        has_active = current_user.has_active_game()
+    except:
+        has_active = False
+    
+    if has_active:
+        return jsonify({'error': 'Вы уже участвуете в активной игре'}), 400
 
-    approved = game.game_type == 'open'
     team = 'team_a' if game.players.filter(GamePlayer.team == 'team_a').count() < 2 else 'team_b'
-    player = GamePlayer(user_id=current_user.id, game_id=game_id, team=team, approved=approved)
+    player = GamePlayer(user_id=current_user.id, game_id=game_id, team=team)
     db.session.add(player)
     db.session.commit()
 
-    return jsonify({'success': True, 'approved': approved})
-
-
-@app.route('/api/games/<int:game_id>/pending')
-def get_pending_players(game_id):
-    current_user = get_user_from_request()
-    if not current_user:
-        return jsonify({'error': 'Not authenticated'}), 401
-
-    game = Game.query.get_or_404(game_id)
-    if game.creator_id != current_user.id:
-        return jsonify({'error': 'Только создатель может видеть заявки'}), 400
-
-    pending = GamePlayer.query.filter_by(game_id=game_id, approved=False).all()
-    return jsonify([{
-        'id': p.player.id,
-        'username': p.player.username
-    } for p in pending])
+    return jsonify({'success': True})
 
 
 @app.route('/api/games/<int:game_id>/leave', methods=['POST'])

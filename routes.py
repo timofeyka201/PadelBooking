@@ -412,26 +412,36 @@ def get_slots():
 
     try:
         target_date = datetime.strptime(date_str, '%Y-%m-%d')
-    except:
+    except Exception as e:
+        app.logger.error(f"get_slots: date parse error: {e}")
         return jsonify([])
 
-    start_of_day = target_date.replace(hour=0, minute=0, second=0)
-    end_of_day = target_date.replace(hour=23, minute=59, second=59)
+    try:
+        from datetime import timezone
+        start_of_day = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=timezone.utc)
+        end_of_day = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=timezone.utc)
 
-    games = Game.query.filter(
-        Game.start_time >= start_of_day,
-        Game.start_time <= end_of_day
-    ).all()
+        games = Game.query.filter(
+            Game.start_time >= start_of_day,
+            Game.start_time <= end_of_day
+        ).all()
 
-    slots = []
-    for g in games:
-        slots.append({
-            'start_time': g.start_time.strftime('%H:%M'),
-            'end_time': g.end_time.strftime('%H:%M'),
-            'game_id': g.id
-        })
+        slots = []
+        for g in games:
+            start_ts = g.start_time.replace(tzinfo=None) if g.start_time.tzinfo else g.start_time
+            end_ts = g.end_time.replace(tzinfo=None) if g.end_time.tzinfo else g.end_time
+            slots.append({
+                'start_time': start_ts.strftime('%H:%M'),
+                'end_time': end_ts.strftime('%H:%M'),
+                'game_id': g.id
+            })
 
-    return jsonify(slots)
+        return jsonify(slots)
+    except Exception as e:
+        app.logger.error(f"get_slots error: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify([])
 
 
 @app.route('/api/games/<int:game_id>', methods=['DELETE'])

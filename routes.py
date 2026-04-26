@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
 from app import app, db, User, Game, GamePlayer
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 def format_datetime(dt):
@@ -218,27 +218,27 @@ def get_current_user():
     })
 
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 @app.route('/api/games')
 def get_games():
     try:
         now = datetime.utcnow()
+        app.logger.error(f"get_games: now = {now}")
+        
         games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
+        app.logger.error(f"get_games: found {len(games)} games")
         
         result = []
         for g in games:
             try:
-                start_ts = g.start_time.strftime('%Y-%m-%dT%H:%M:%S')
-                end_ts = g.end_time.strftime('%Y-%m-%dT%H:%M:%S')
-                
                 result.append({
                     'id': g.id,
                     'title': g.title,
                     'description': g.description or '',
-                    'start_time': start_ts,
-                    'end_time': end_ts,
+                    'start_time': g.start_time.strftime('%Y-%m-%dT%H:%M'),
+                    'end_time': g.end_time.strftime('%Y-%m-%dT%H:%M'),
                     'status': g.status,
                     'creator': {
                         'id': g.creator.id,
@@ -253,11 +253,12 @@ def get_games():
                     } for p in g.players]
                 })
             except Exception as e:
-                app.logger.error(f"get_games: error processing game {g.id}: {e}")
+                app.logger.error(f"ERROR processing game {g.id}: {e}")
         
+        app.logger.error(f"get_games: returning {len(result)} games")
         return jsonify(result)
     except Exception as e:
-        app.logger.error(f"get_games error: {e}")
+        app.logger.error(f"get_games EXCEPTION: {e}")
         import traceback
         app.logger.error(traceback.format_exc())
         return jsonify([])
@@ -435,27 +436,22 @@ def get_slots():
         return jsonify([])
 
     try:
-        target_date = datetime.strptime(date_str, '%Y-%m-%d')
-    except Exception as e:
-        app.logger.error(f"get_slots: date parse error: {e}")
+        target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except:
         return jsonify([])
 
     try:
-        start_of_day = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
-        end_of_day = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=timezone.utc)
-
-        games = Game.query.filter(
-            Game.start_time >= start_of_day,
-            Game.start_time <= end_of_day
-        ).all()
-
+        games = Game.query.all()
+        
         slots = []
         for g in games:
-            slots.append({
-                'start_time': str(g.start_time.hour).zfill(2) + ':00',
-                'end_time': str(g.end_time.hour).zfill(2) + ':00',
-                'game_id': g.id
-            })
+            game_date = g.start_time.date() if hasattr(g.start_time, 'date') else g.start_time.date
+            if game_date == target_date:
+                slots.append({
+                    'start_time': str(g.start_time.hour).zfill(2) + ':00',
+                    'end_time': str(g.end_time.hour).zfill(2) + ':00',
+                    'game_id': g.id
+                })
 
         return jsonify(slots)
     except Exception as e:

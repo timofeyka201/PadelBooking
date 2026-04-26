@@ -96,6 +96,12 @@ def init_db():
     try:
         with app.app_context():
             db.create_all()
+            from sqlalchemy import text
+            try:
+                db.session.execute(text('ALTER TABLE user ADD COLUMN password_hash VARCHAR(200)'))
+                db.session.commit()
+            except:
+                pass
     except Exception as e:
         app.logger.error(f"DB init error: {e}")
 

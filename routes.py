@@ -44,12 +44,16 @@ def health():
             try:
                 db.session.execute(text('ALTER TABLE "user" ADD COLUMN password_hash VARCHAR(200)'))
                 db.session.commit()
-                columns.append('password_hash')
-            except Exception as e:
-                app.logger.error(f"Auto-migrate error: {e}")
+            except: pass
+        
+        # Fix telegram_id to allow NULL
+        try:
+            db.session.execute(text('ALTER TABLE "user" ALTER COLUMN telegram_id DROP NOT NULL'))
+            db.session.commit()
+        except: pass
         
         result = db.session.execute(text('SELECT COUNT(*) FROM "user"')).scalar()
-        return jsonify({'status': 'ok', 'users': result, 'columns': columns})
+        return jsonify({'status': 'ok', 'users': result})
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
 

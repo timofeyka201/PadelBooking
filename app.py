@@ -121,13 +121,32 @@ def init_db():
             try:
                 if 'user' in tables:
                     columns = [c['name'] for c in inspector.get_columns('user')]
-                    app.logger.error(f"User columns: {columns}")
                     if 'password_hash' not in columns:
                         db.session.execute(text('ALTER TABLE "user" ADD COLUMN password_hash VARCHAR(200)'))
                         db.session.commit()
-                        app.logger.error("Added password_hash column")
             except Exception as e:
                 app.logger.error(f"Migration error: {e}")
+            
+            if 'game' in tables:
+                try:
+                    game_columns = [c['name'] for c in inspector.get_columns('game')]
+                    if 'level' not in game_columns:
+                        db.session.execute(text('ALTER TABLE "game" ADD COLUMN level VARCHAR(10) DEFAULT \'all\''))
+                        db.session.commit()
+                    if 'game_type' not in game_columns:
+                        db.session.execute(text('ALTER TABLE "game" ADD COLUMN game_type VARCHAR(20) DEFAULT \'open\''))
+                        db.session.commit()
+                except Exception as e:
+                    app.logger.error(f"Game migration error: {e}")
+            
+            if 'game_player' in tables:
+                try:
+                    player_columns = [c['name'] for c in inspector.get_columns('game_player')]
+                    if 'approved' not in player_columns:
+                        db.session.execute(text('ALTER TABLE "game_player" ADD COLUMN approved BOOLEAN DEFAULT 0'))
+                        db.session.commit()
+                except Exception as e:
+                    app.logger.error(f"GamePlayer migration error: {e}")
             
             db.create_all()
     except Exception as e:

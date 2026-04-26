@@ -9,12 +9,17 @@ def verify_telegram_data(data):
 
 
 def get_user_from_request():
+    from app import app
     user_id = request.headers.get('X-User-ID')
+    app.logger.error(f"get_user_from_request: X-User-ID header = '{user_id}'")
     if not user_id:
         user_id = request.args.get('user_id')
     if not user_id:
+        app.logger.error("get_user_from_request: no user_id found")
         return None
-    return User.query.get(int(user_id))
+    user = User.query.get(int(user_id))
+    app.logger.error(f"get_user_from_request: found user = {user}")
+    return user
 
 
 @app.route('/')
@@ -221,17 +226,22 @@ def get_games():
 def create_game():
     from app import app
     current_user = get_user_from_request()
-    app.logger.error(f"create_game: user={current_user}")
+    app.logger.error(f"create_game: current_user = {current_user}")
     if not current_user:
         return jsonify({'error': 'Not authenticated'}), 401
 
     data = request.get_json()
+    app.logger.error(f"create_game: data = {data}")
 
     if current_user.has_created_game():
         return jsonify({'error': 'Вы уже создали игру. Нельзя создавать больше одной активной игры.'}), 400
 
-    start_time = datetime.fromisoformat(data['start_time'])
-    end_time = datetime.fromisoformat(data['end_time'])
+    try:
+        start_time = datetime.fromisoformat(data['start_time'])
+        end_time = datetime.fromisoformat(data['end_time'])
+    except Exception as e:
+        app.logger.error(f"create_game: date parse error: {e}")
+        return jsonify({'error': 'Неверный формат даты'}), 400
 
     game = Game(
         title=data['title'],
@@ -242,6 +252,7 @@ def create_game():
     )
     db.session.add(game)
     db.session.commit()
+    app.logger.error(f"create_game: created game {game.id}")
 
     player = GamePlayer(user_id=current_user.id, game_id=game.id, team='creator')
     db.session.add(player)

@@ -629,10 +629,17 @@
         async function loadGames() {
             try {
                 const response = await fetch(API_URL + '/api/games', { headers: getAuthHeaders() });
-                games = await response.json();
+                if (response.ok) {
+                    games = await response.json();
+                } else {
+                    games = [];
+                    console.log('loadGames error:', response.status);
+                }
                 renderGames();
             } catch (e) {
                 console.error('Load error:', e);
+                games = [];
+                renderGames();
             }
         }
 

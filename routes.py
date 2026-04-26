@@ -273,24 +273,24 @@ def create_game():
     data = request.get_json()
     app.logger.error(f"create_game: data = {data}")
 
+    start_time_str = data.get('start_time', '')
+    end_time_str = data.get('end_time', '')
+
+    if not start_time_str or not end_time_str:
+        return jsonify({'error': 'Укажите дату и время'}), 400
+
     try:
-        start_time_str = data.get('start_time', '')
-        end_time_str = data.get('end_time', '')
-        
-        if not start_time_str or not end_time_str:
-            return jsonify({'error': 'Укажите дату и время'}), 400
-        
         start_time = datetime.fromisoformat(start_time_str.replace(' ', 'T'))
         end_time = datetime.fromisoformat(end_time_str.replace(' ', 'T'))
-        
-        app.logger.error(f"create_game: parsed start={start_time}, end={end_time}")
     except Exception as e:
-        app.logger.error(f"create_game: date error: {e}")
+        app.logger.error(f"date parse error: {e}")
         return jsonify({'error': 'Неверный формат даты. Используйте YYYY-MM-DD HH:MM'}), 400
+
+    app.logger.error(f"parsed: start={start_time}, end={end_time}")
 
     try:
         game = Game(
-            title=data.get('title', 'Игра'),
+            title=data.get('title', 'Игра') or 'Игра',
             description=data.get('description', ''),
             level=data.get('level', 'all'),
             game_type=data.get('game_type', 'open'),
@@ -299,15 +299,16 @@ def create_game():
             creator_id=current_user.id
         )
         db.session.add(game)
-        db.session.commit()
+        db.session.flush()
         
         player = GamePlayer(user_id=current_user.id, game_id=game.id, team='creator', approved=True)
         db.session.add(player)
         db.session.commit()
 
+        app.logger.error(f"game created: {game.id}")
         return jsonify({'success': True, 'game_id': game.id})
     except Exception as e:
-        app.logger.error(f"create_game: db error: {e}")
+        app.logger.error(f"DB error: {e}")
         import traceback
         app.logger.error(traceback.format_exc())
         db.session.rollback()

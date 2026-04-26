@@ -9,12 +9,12 @@ def verify_telegram_data(data):
 
 
 def get_user_from_request():
-    telegram_id = request.headers.get('X-Telegram-ID')
-    if not telegram_id:
-        telegram_id = request.args.get('telegram_id')
-    if not telegram_id:
+    user_id = request.headers.get('X-User-ID')
+    if not user_id:
+        user_id = request.args.get('user_id')
+    if not user_id:
         return None
-    return User.query.filter_by(telegram_id=str(telegram_id)).first()
+    return User.query.get(int(user_id))
 
 
 @app.route('/')

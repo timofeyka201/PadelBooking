@@ -1,11 +1,20 @@
 from flask import render_template, request, jsonify
+from flask_login import login_required, current_user
 from app import app, db, User, Game, GamePlayer
 from datetime import datetime
 
 
 def verify_telegram_data(data):
-    # Always pass for development
     return True
+
+
+def get_user_from_request():
+    telegram_id = request.headers.get('X-Telegram-ID')
+    if not telegram_id:
+        telegram_id = request.args.get('telegram_id')
+    if not telegram_id:
+        return None
+    return User.query.filter_by(telegram_id=str(telegram_id)).first()
 
 
 @app.route('/')
@@ -223,8 +232,11 @@ def delete_game(game_id):
 
 
 @app.route('/api/games/my')
-@login_required
 def my_games():
+    current_user = get_user_from_request()
+    if not current_user:
+        return jsonify({'error': 'Not authenticated'}), 401
+
     created = Game.query.filter_by(creator_id=current_user.id).order_by(Game.start_time.desc()).all()
     participating = Game.query.join(GamePlayer).filter(
         GamePlayer.user_id == current_user.id

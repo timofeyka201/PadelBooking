@@ -90,3 +90,14 @@ def init_db():
             db.create_all()
     except Exception as e:
         app.logger.error(f"DB init error: {e}")
+
+
+@app.route('/favicon.ico')
+def favicon():
+    from flask import send_from_directory
+    return send_from_directory('static', 'favicon.ico')
+
+
+import routes
+
+handler = app

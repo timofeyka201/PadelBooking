@@ -61,6 +61,7 @@ def register():
             'first_name': user.first_name
         }})
     except Exception as e:
+        app.logger.error(f"Register error: {e}")
         return jsonify({'error': str(e)}), 500
 
 

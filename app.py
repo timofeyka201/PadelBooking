@@ -26,6 +26,7 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN')
 
 
 class User(db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
@@ -61,13 +62,14 @@ class User(db.Model):
 
 
 class Game(db.Model):
+    __tablename__ = 'games'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default='scheduled')
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     players = db.relationship('GamePlayer', backref='game', lazy='dynamic', cascade='all, delete-orphan')
@@ -80,9 +82,10 @@ class Game(db.Model):
 
 
 class GamePlayer(db.Model):
+    __tablename__ = 'game_players'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
     team = db.Column(db.String(20))
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -96,12 +99,15 @@ def init_db():
     try:
         with app.app_context():
             db.create_all()
-            from sqlalchemy import text
+            from sqlalchemy import text, inspect
+            inspector = inspect(db.engine)
             try:
-                db.session.execute(text('ALTER TABLE user ADD COLUMN password_hash VARCHAR(200)'))
-                db.session.commit()
-            except:
-                pass
+                columns = [c['name'] for c in inspector.get_columns('user')]
+                if 'password_hash' not in columns:
+                    db.session.execute(text('ALTER TABLE user ADD COLUMN password_hash VARCHAR(200)'))
+                    db.session.commit()
+            except Exception as e:
+                app.logger.error(f"Migration error: {e}")
     except Exception as e:
         app.logger.error(f"DB init error: {e}")
 

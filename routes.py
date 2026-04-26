@@ -267,23 +267,11 @@ def get_games():
 def create_game():
     from app import app
     current_user = get_user_from_request()
-    app.logger.error(f"create_game: current_user = {current_user}")
     if not current_user:
-        app.logger.error("create_game: no user")
         return jsonify({'error': 'Not authenticated'}), 401
 
     data = request.get_json()
-    app.logger.error(f"create_game: start_time = '{data.get('start_time')}', end_time = '{data.get('end_time')}'")
-
-    try:
-        has_created = current_user.has_created_game()
-    except Exception as e:
-        app.logger.error(f"has_created_game error: {e}")
-        has_created = False
-    
-    if has_created:
-        app.logger.error("create_game: user already has game")
-        return jsonify({'error': 'Вы уже создали игру. Нельзя создавать больше одной активной игры.'}), 400
+    app.logger.error(f"create_game: data = {data}")
 
     try:
         start_time_str = data.get('start_time', '')
@@ -295,19 +283,14 @@ def create_game():
         start_time = datetime.fromisoformat(start_time_str.replace(' ', 'T'))
         end_time = datetime.fromisoformat(end_time_str.replace(' ', 'T'))
         
-        if start_time.tzinfo is None:
-            start_time = start_time.replace(tzinfo=timezone.utc)
-        if end_time.tzinfo is None:
-            end_time = end_time.replace(tzinfo=timezone.utc)
-        
         app.logger.error(f"create_game: parsed start={start_time}, end={end_time}")
     except Exception as e:
         app.logger.error(f"create_game: date error: {e}")
-        return jsonify({'error': 'Неверный формат даты'}), 400
+        return jsonify({'error': 'Неверный формат даты. Используйте YYYY-MM-DD HH:MM'}), 400
 
     try:
         game = Game(
-            title=data['title'],
+            title=data.get('title', 'Игра'),
             description=data.get('description', ''),
             level=data.get('level', 'all'),
             game_type=data.get('game_type', 'open'),
@@ -317,8 +300,7 @@ def create_game():
         )
         db.session.add(game)
         db.session.commit()
-        app.logger.error(f"create_game: created game {game.id}")
-
+        
         player = GamePlayer(user_id=current_user.id, game_id=game.id, team='creator', approved=True)
         db.session.add(player)
         db.session.commit()
@@ -329,7 +311,7 @@ def create_game():
         import traceback
         app.logger.error(traceback.format_exc())
         db.session.rollback()
-        return jsonify({'error': 'Ошибка при создании игры'}), 500
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/games/<int:game_id>')

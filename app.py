@@ -82,13 +82,13 @@ class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    level = db.Column(db.String(10), default='all')
-    game_type = db.Column(db.String(20), default='open')
+    level = db.Column(db.String(10), nullable=True)
+    game_type = db.Column(db.String(20), nullable=True)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default='scheduled')
     creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=_utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     players = db.relationship('GamePlayer', backref='game', lazy='dynamic', cascade='all, delete-orphan')
 
@@ -104,8 +104,8 @@ class GamePlayer(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
     team = db.Column(db.String(20))
-    approved = db.Column(db.Boolean, default=False)
-    joined_at = db.Column(db.DateTime, default=_utcnow)
+    approved = db.Column(db.Boolean, nullable=True)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 @login_manager.user_loader

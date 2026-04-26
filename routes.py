@@ -35,9 +35,11 @@ def login():
 @app.route('/api/health')
 def health():
     try:
-        from sqlalchemy import text
+        from sqlalchemy import text, inspect
+        inspector = inspect(db.engine)
+        columns = [c['name'] for c in inspector.get_columns('user')]
         result = db.session.execute(text('SELECT COUNT(*) FROM "user"')).scalar()
-        return jsonify({'status': 'ok', 'users': result})
+        return jsonify({'status': 'ok', 'users': result, 'columns': columns})
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)}), 500
 

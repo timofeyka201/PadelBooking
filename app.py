@@ -5,7 +5,7 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from datetime import datetime
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key')
@@ -45,8 +45,12 @@ class User(db.Model):
         import hashlib
         return self.password_hash == hashlib.sha256(password.encode()).hexdigest()
 
+    from datetime import datetime, timezone
+
+# ... existing code stays the same
+
     def has_active_game(self):
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         return Game.query.join(GamePlayer).filter(
             GamePlayer.user_id == self.id,
             Game.start_time > now,
@@ -54,7 +58,7 @@ class User(db.Model):
         ).first() is not None
 
     def has_created_game(self):
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         return Game.query.filter(
             Game.creator_id == self.id,
             Game.start_time > now,

@@ -211,7 +211,7 @@ from datetime import datetime, timezone
 @app.route('/api/games')
 def get_games():
     try:
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
         
         return jsonify([{
@@ -220,8 +220,8 @@ def get_games():
             'description': g.description,
             'level': g.level,
             'game_type': g.game_type,
-            'start_time': format_datetime(g.start_time),
-            'end_time': format_datetime(g.end_time),
+            'start_time': g.start_time.isoformat(),
+            'end_time': g.end_time.isoformat(),
             'status': g.status,
             'creator': {
                 'id': g.creator.id,

@@ -226,18 +226,22 @@ def get_games():
     try:
         now = datetime.utcnow()
         games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
+        app.logger.error(f"get_games: found {games.__len__()} games")
         
         result = []
         for g in games:
             try:
+                start_ts = g.start_time.strftime('%Y-%m-%dT%H:%M:%S')
+                end_ts = g.end_time.strftime('%Y-%m-%dT%H:%M:%S')
+                
                 result.append({
                     'id': g.id,
                     'title': g.title,
-                    'description': g.description,
-                    'level': getattr(g, 'level', 'all'),
-                    'game_type': getattr(g, 'game_type', 'open'),
-                    'start_time': g.start_time.isoformat(),
-                    'end_time': g.end_time.isoformat(),
+                    'description': g.description or '',
+                    'level': g.level or 'all',
+                    'game_type': g.game_type or 'open',
+                    'start_time': start_ts,
+                    'end_time': end_ts,
                     'status': g.status,
                     'creator': {
                         'id': g.creator.id,
@@ -248,8 +252,8 @@ def get_games():
                     'players': [{
                         'id': p.player.id,
                         'username': p.player.username,
-                        'team': p.team,
-                        'approved': getattr(p, 'approved', True)
+                        'team': p.team or 'team_a',
+                        'approved': bool(p.approved)
                     } for p in g.players]
                 })
             except Exception as e:

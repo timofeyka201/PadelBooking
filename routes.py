@@ -32,13 +32,26 @@ def login():
     return render_template('login.html')
 
 
+@app.route('/api/health')
+def health():
+    try:
+        from sqlalchemy import text
+        result = db.session.execute(text('SELECT COUNT(*) FROM "user"')).scalar()
+        return jsonify({'status': 'ok', 'users': result})
+    except Exception as e:
+        return jsonify({'status': 'error', 'error': str(e)}), 500
+
+
 @app.route('/api/auth/register', methods=['POST'])
 def register():
+    from app import app
     try:
         data = request.get_json()
         username = data.get('username', '').strip()
         password = data.get('password', '')
         first_name = data.get('first_name', '')
+
+        app.logger.error(f"REGISTER: username={username}")
 
         if not username or not password:
             return jsonify({'error': 'Введите имя пользователя и пароль'}), 400
@@ -55,6 +68,8 @@ def register():
         db.session.add(user)
         db.session.commit()
 
+        app.logger.error(f"REGISTER: success id={user.id}")
+
         return jsonify({'success': True, 'user': {
             'id': user.id,
             'username': user.username,
@@ -62,6 +77,44 @@ def register():
         }})
     except Exception as e:
         app.logger.error(f"Register error: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+    from app import app
+    try:
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+        first_name = data.get('first_name', '')
+
+        app.logger.error(f"REGISTER: username={username}")
+
+        if not username or not password:
+            return jsonify({'error': 'Введите имя пользователя и пароль'}), 400
+
+        if len(password) < 4:
+            return jsonify({'error': 'Пароль должен быть минимум 4 символа'}), 400
+
+        existing = User.query.filter_by(username=username).first()
+        if existing:
+            return jsonify({'error': 'Это имя пользователя уже занято'}), 400
+
+        user = User(username=username, first_name=first_name)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+
+        app.logger.error(f"REGISTER: success id={user.id}")
+
+        return jsonify({'success': True, 'user': {
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name
+        }})
+    except Exception as e:
+        app.logger.error(f"Register error: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 

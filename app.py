@@ -27,6 +27,7 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN')
 
 
 class User(db.Model):
+    __tablename__ = '"user"'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
@@ -100,11 +101,11 @@ def init_db():
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             
-            # Add password_hash to existing user table
             try:
                 if 'user' in tables:
                     columns = [c['name'] for c in inspector.get_columns('user')]
                     if 'password_hash' not in columns:
+                        # Add nullable first, then update
                         db.session.execute(text('ALTER TABLE "user" ADD COLUMN password_hash VARCHAR(200)'))
                         db.session.commit()
             except Exception as e:

@@ -479,34 +479,45 @@
         async function init() {
             console.log('=== INIT STARTED ===');
             
-            // ALWAYS try to get user_id from URL first
-            const urlParams = new URLSearchParams(window.location.search);
-            let telegramId = urlParams.get('user_id');
-            console.log('From URL user_id:', telegramId);
+            let telegramId = null;
+            let telegramUser = null;
             
-            // If not in URL, try localStorage
-            if (!telegramId) {
-                telegramId = localStorage.getItem('telegram_id');
-                console.log('From localStorage:', telegramId);
-            }
-            
-            // Try Telegram WebApp
+            // Try Telegram WebApp first
             if (tg) {
                 tg.ready();
                 tg.expand();
                 const user = tg?.initDataUnsafe?.user;
                 if (user?.id) {
                     telegramId = user.id;
-                    console.log('From Telegram:', telegramId);
+                    telegramUser = user;
+                    console.log('From Telegram:', telegramId, user);
                 }
+            }
+            
+            // Fallback to URL
+            if (!telegramId) {
+                const urlParams = new URLSearchParams(window.location.search);
+                telegramId = urlParams.get('user_id');
+                console.log('From URL user_id:', telegramId);
+            }
+            
+            // Fallback to localStorage
+            if (!telegramId) {
+                telegramId = localStorage.getItem('telegram_id');
+                console.log('From localStorage:', telegramId);
             }
 
             console.log('Final telegramId:', telegramId);
 
             if (telegramId) {
                 try {
-                    const authData = { id: String(telegramId), username: 'user', first_name: 'User' };
-                    console.log('Sending auth request...');
+                    const authData = { 
+                        id: String(telegramId), 
+                        username: telegramUser?.username || 'user', 
+                        first_name: telegramUser?.first_name || 'User',
+                        last_name: telegramUser?.last_name || ''
+                    };
+                    console.log('Sending auth request:', authData);
                     
                     const response = await fetch(API_URL + '/api/auth/telegram', {
                         method: 'POST',
@@ -523,6 +534,9 @@
                         const badge = document.getElementById('user-badge');
                         if (badge) badge.textContent = '@' + currentUser.username;
                         console.log('Set user badge');
+                    } else {
+                        const err = await response.json();
+                        console.error('Auth error:', err);
                     }
                 } catch (e) {
                     console.error('Auth error:', e);

@@ -99,15 +99,6 @@ def init_db():
     try:
         with app.app_context():
             db.create_all()
-            from sqlalchemy import text, inspect
-            inspector = inspect(db.engine)
-            try:
-                columns = [c['name'] for c in inspector.get_columns('user')]
-                if 'password_hash' not in columns:
-                    db.session.execute(text('ALTER TABLE user ADD COLUMN password_hash VARCHAR(200)'))
-                    db.session.commit()
-            except Exception as e:
-                app.logger.error(f"Migration error: {e}")
     except Exception as e:
         app.logger.error(f"DB init error: {e}")
 

@@ -54,20 +54,26 @@ class User(db.Model):
 # ... existing code stays the same
 
     def has_active_game(self):
-        now = datetime.now(timezone.utc)
-        return Game.query.join(GamePlayer).filter(
-            GamePlayer.user_id == self.id,
-            Game.start_time > now,
-            Game.status == 'scheduled'
-        ).first() is not None
+        try:
+            now = datetime.now(timezone.utc)
+            return Game.query.join(GamePlayer).filter(
+                GamePlayer.user_id == self.id,
+                Game.start_time > now,
+                Game.status == 'scheduled'
+            ).first() is not None
+        except Exception:
+            return False
 
     def has_created_game(self):
-        now = datetime.now(timezone.utc)
-        return Game.query.filter(
-            Game.creator_id == self.id,
-            Game.start_time > now,
-            Game.status == 'scheduled'
-        ).first() is not None
+        try:
+            now = datetime.now(timezone.utc)
+            return Game.query.filter(
+                Game.creator_id == self.id,
+                Game.start_time > now,
+                Game.status == 'scheduled'
+            ).first() is not None
+        except Exception:
+            return False
 
 
 class Game(db.Model):

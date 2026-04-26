@@ -196,12 +196,25 @@ def get_current_user():
         return jsonify({'error': 'Not authenticated'}), 401
     
     app.logger.error(f"/api/user/me: found user {user.id}, {user.username}")
+    
+    try:
+        has_active = user.has_active_game()
+    except Exception as e:
+        app.logger.error(f"has_active_game error: {e}")
+        has_active = False
+    
+    try:
+        has_created = user.has_created_game()
+    except Exception as e:
+        app.logger.error(f"has_created_game error: {e}")
+        has_created = False
+    
     return jsonify({
         'id': user.id,
         'username': user.username,
         'first_name': user.first_name,
-        'has_active_game': user.has_active_game(),
-        'has_created_game': user.has_created_game()
+        'has_active_game': has_active,
+        'has_created_game': has_created
     })
 
 
@@ -214,28 +227,35 @@ def get_games():
         now = datetime.now(timezone.utc)
         games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
         
-        return jsonify([{
-            'id': g.id,
-            'title': g.title,
-            'description': g.description,
-            'level': g.level,
-            'game_type': g.game_type,
-            'start_time': g.start_time.isoformat(),
-            'end_time': g.end_time.isoformat(),
-            'status': g.status,
-            'creator': {
-                'id': g.creator.id,
-                'username': g.creator.username
-            },
-            'player_count': g.get_player_count(),
-            'is_full': g.is_full(),
-            'players': [{
-                'id': p.player.id,
-                'username': p.player.username,
-                'team': p.team,
-                'approved': p.approved
-            } for p in g.players]
-        } for g in games])
+        result = []
+        for g in games:
+            try:
+                result.append({
+                    'id': g.id,
+                    'title': g.title,
+                    'description': g.description,
+                    'level': g.level,
+                    'game_type': g.game_type,
+                    'start_time': g.start_time.isoformat(),
+                    'end_time': g.end_time.isoformat(),
+                    'status': g.status,
+                    'creator': {
+                        'id': g.creator.id,
+                        'username': g.creator.username
+                    },
+                    'player_count': g.get_player_count(),
+                    'is_full': g.is_full(),
+                    'players': [{
+                        'id': p.player.id,
+                        'username': p.player.username,
+                        'team': p.team,
+                        'approved': p.approved
+                    } for p in g.players]
+                })
+            except Exception as e:
+                app.logger.error(f"get_games: error processing game {g.id}: {e}")
+        
+        return jsonify(result)
     except Exception as e:
         app.logger.error(f"get_games error: {e}")
         import traceback

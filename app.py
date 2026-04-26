@@ -104,10 +104,11 @@ def init_db():
             try:
                 if 'user' in tables:
                     columns = [c['name'] for c in inspector.get_columns('user')]
+                    app.logger.error(f"User columns: {columns}")
                     if 'password_hash' not in columns:
-                        # Add nullable first, then update
                         db.session.execute(text('ALTER TABLE "user" ADD COLUMN password_hash VARCHAR(200)'))
                         db.session.commit()
+                        app.logger.error("Added password_hash column")
             except Exception as e:
                 app.logger.error(f"Migration error: {e}")
             

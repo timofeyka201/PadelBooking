@@ -26,13 +26,17 @@ login_manager.login_view = 'login'
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN')
 
 
+def _utcnow():
+    return datetime.now(timezone.utc)
+
+
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     first_name = db.Column(db.String(100))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=_utcnow)
 
     games_created = db.relationship('Game', backref='creator', lazy='dynamic', foreign_keys='Game.creator_id')
     participations = db.relationship('GamePlayer', backref='player', lazy='dynamic')
@@ -76,7 +80,7 @@ class Game(db.Model):
     end_time = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default='scheduled')
     creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=_utcnow)
 
     players = db.relationship('GamePlayer', backref='game', lazy='dynamic', cascade='all, delete-orphan')
 
@@ -93,7 +97,7 @@ class GamePlayer(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
     team = db.Column(db.String(20))
     approved = db.Column(db.Boolean, default=False)
-    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+    joined_at = db.Column(db.DateTime, default=_utcnow)
 
 
 @login_manager.user_loader

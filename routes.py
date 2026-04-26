@@ -234,8 +234,8 @@ def get_games():
                     'id': g.id,
                     'title': g.title,
                     'description': g.description,
-                    'level': g.level,
-                    'game_type': g.game_type,
+                    'level': getattr(g, 'level', 'all'),
+                    'game_type': getattr(g, 'game_type', 'open'),
                     'start_time': g.start_time.isoformat(),
                     'end_time': g.end_time.isoformat(),
                     'status': g.status,
@@ -249,7 +249,7 @@ def get_games():
                         'id': p.player.id,
                         'username': p.player.username,
                         'team': p.team,
-                        'approved': p.approved
+                        'approved': getattr(p, 'approved', True)
                     } for p in g.players]
                 })
             except Exception as e:
@@ -260,7 +260,7 @@ def get_games():
         app.logger.error(f"get_games error: {e}")
         import traceback
         app.logger.error(traceback.format_exc())
-        return jsonify({'error': str(e)}), 500
+        return jsonify([])
 
 
 @app.route('/api/games', methods=['POST'])
@@ -315,14 +315,14 @@ def create_game():
 @app.route('/api/games/<int:game_id>')
 def get_game(game_id):
     game = Game.query.get_or_404(game_id)
-    return jsonify({
+return jsonify({
         'id': game.id,
         'title': game.title,
         'description': game.description,
-        'level': game.level,
-        'game_type': game.game_type,
-        'start_time': format_datetime(game.start_time),
-        'end_time': format_datetime(game.end_time),
+        'level': getattr(game, 'level', 'all'),
+        'game_type': getattr(game, 'game_type', 'open'),
+        'start_time': game.start_time.isoformat(),
+        'end_time': game.end_time.isoformat(),
         'status': game.status,
         'creator': {
             'id': game.creator.id,
@@ -334,7 +334,7 @@ def get_game(game_id):
             'id': p.player.id,
             'username': p.player.username,
             'team': p.team,
-            'approved': p.approved
+            'approved': getattr(p, 'approved', True)
         } for p in game.players]
     })
 

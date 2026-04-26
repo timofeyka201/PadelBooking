@@ -219,7 +219,9 @@ def get_games():
 
 @app.route('/api/games', methods=['POST'])
 def create_game():
+    from app import app
     current_user = get_user_from_request()
+    app.logger.error(f"create_game: user={current_user}")
     if not current_user:
         return jsonify({'error': 'Not authenticated'}), 401
 

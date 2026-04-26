@@ -211,7 +211,7 @@ from datetime import datetime, timezone
 @app.route('/api/games')
 def get_games():
     try:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
         
         return jsonify([{

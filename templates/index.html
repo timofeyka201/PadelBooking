@@ -16,79 +16,108 @@
         }
 
         :root {
-            --tg-theme-bg-color: #ffffff;
-            --tg-theme-text-color: #000000;
-            --tg-theme-button-color: #10B981;
-            --tg-theme-button-text-color: #ffffff;
             --primary: #10B981;
             --primary-dark: #059669;
+            --primary-light: #D1FAE5;
             --danger: #DC2626;
+            --warning: #F59E0B;
             --gray-50: #F9FAFB;
             --gray-100: #F3F4F6;
             --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
             --gray-400: #9CA3AF;
-            --gray-600: #6B7280;
-            --gray-800: #374151;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
             --gray-900: #111827;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--gray-100);
+            background: var(--gray-50);
             color: var(--gray-900);
             min-height: 100vh;
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-bottom: 80px;
         }
 
-        .header {
-            background: var(--tg-theme-bg-color);
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--gray-200);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 18px;
-            font-weight: 700;
-            color: #064E3B;
-        }
-
-        .logo svg {
-            width: 28px;
-            height: 28px;
-        }
-
-        .user-badge {
-            background: var(--primary);
+        .landing {
+            background: linear-gradient(180deg, #064E3B 0%, #10B981 100%);
+            padding: 60px 20px 40px;
             color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            text-align: center;
         }
 
-        .container {
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
+        .landing-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
         }
 
-        .section-title {
-            font-size: 20px;
+        .landing-logo svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        .landing-logo span {
+            font-size: 28px;
             font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 16px;
         }
 
-        .create-btn {
+        .landing h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .landing p {
+            font-size: 16px;
+            opacity: 0.9;
+            max-width: 300px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            padding: 24px 20px;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            margin-top: -20px;
+        }
+
+        .feature-item {
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 24px;
+        }
+
+        .feature-item span {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .cta-section {
+            padding: 20px;
+            background: white;
+        }
+
+        .cta-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -97,12 +126,36 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 14px 20px;
-            border-radius: 12px;
-            font-size: 15px;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .section {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title .count {
+            background: var(--gray-100);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-600);
         }
 
         .games-list {
@@ -112,7 +165,7 @@
         }
 
         .game-card {
-            background: var(--tg-theme-bg-color);
+            background: white;
             border-radius: 16px;
             padding: 16px;
             cursor: pointer;
@@ -134,31 +187,47 @@
         .game-card-title {
             font-size: 16px;
             font-weight: 600;
-            color: var(--gray-900);
         }
 
-        .game-status {
+        .game-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
             font-size: 10px;
             padding: 4px 8px;
-            border-radius: 12px;
+            border-radius: 8px;
             font-weight: 600;
         }
 
-        .status-open {
-            background: #D1FAE5;
-            color: #065F46;
+        .badge-open {
+            background: var(--primary-light);
+            color: var(--primary-dark);
         }
 
-        .status-full {
+        .badge-closed {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-full {
             background: #FEE2E2;
             color: #991B1B;
+        }
+
+        .badge-level {
+            background: var(--gray-100);
+            color: var(--gray-700);
         }
 
         .game-meta {
             display: flex;
             gap: 16px;
             font-size: 13px;
-            color: var(--gray-600);
+            color: var(--gray-500);
+            margin-top: 8px;
         }
 
         .game-meta span {
@@ -167,25 +236,37 @@
             gap: 4px;
         }
 
-        .game-description {
-            font-size: 13px;
-            color: var(--gray-600);
-            margin-top: 8px;
-            line-height: 1.4;
-        }
-
-        .game-creator {
-            font-size: 12px;
-            color: var(--gray-400);
+        .game-players {
+            display: flex;
+            gap: 4px;
             margin-top: 10px;
             padding-top: 10px;
-            border-top: 1px solid var(--gray-200);
+            border-top: 1px solid var(--gray-100);
+        }
+
+        .player-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .player-dot.pending {
+            background: var(--warning);
         }
 
         .empty-state {
             text-align: center;
             padding: 40px 20px;
             color: var(--gray-400);
+            background: white;
+            border-radius: 16px;
         }
 
         .modal-overlay {
@@ -210,7 +291,7 @@
         }
 
         .modal {
-            background: var(--tg-theme-bg-color);
+            background: var(--gray-50);
             border-radius: 20px 20px 0 0;
             width: 100%;
             max-width: 600px;
@@ -229,46 +310,53 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
+            background: white;
             border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 0;
         }
 
         .modal-header h3 {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
         }
 
         .modal-close {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 28px;
             color: var(--gray-400);
             cursor: pointer;
+            padding: 4px;
+            line-height: 1;
         }
 
         .modal-body {
             padding: 20px;
+            background: var(--gray-50);
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
             font-size: 13px;
-            font-weight: 500;
-            color: var(--gray-600);
-            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 8px;
         }
 
         .form-group input,
         .form-group textarea {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: 1px solid var(--gray-200);
-            border-radius: 10px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 15px;
             font-family: inherit;
+            background: white;
         }
 
         .form-group textarea {
@@ -276,10 +364,187 @@
             resize: none;
         }
 
-        .form-row {
+        .level-selector {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .level-btn {
+            padding: 12px 8px;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--gray-600);
+        }
+
+        .level-btn.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .type-selector {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
+        }
+
+        .type-btn {
+            padding: 14px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .type-btn.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .type-btn small {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
+        .calendar-section {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .calendar-nav button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            color: var(--gray-600);
+        }
+
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .calendar-days {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .calendar-day {
+            flex-shrink: 0;
+            width: 48px;
+            text-align: center;
+            padding: 12px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--gray-50);
+        }
+
+        .calendar-day.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .calendar-day.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .calendar-day .day-name {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .calendar-day .day-num {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .time-slots {
+            margin-top: 16px;
+        }
+
+        .time-slots-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 12px;
+        }
+
+        .time-slots-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .time-slot {
+            padding: 12px 8px;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-slot:hover:not(.disabled) {
+            border-color: var(--primary);
+        }
+
+        .time-slot.selected {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .time-slot.disabled {
+            background: var(--gray-100);
+            color: var(--gray-400);
+            cursor: not-allowed;
+            border-color: transparent;
+        }
+
+        .time-slot.occupied {
+            background: var(--gray-100);
+            color: var(--gray-400);
+            cursor: not-allowed;
+            border-color: transparent;
+            text-decoration: line-through;
         }
 
         .modal-footer {
@@ -287,14 +552,15 @@
             padding-bottom: calc(16px + env(safe-area-inset-bottom));
             display: flex;
             gap: 12px;
+            background: white;
             border-top: 1px solid var(--gray-200);
         }
 
         .btn {
             flex: 1;
-            padding: 14px;
-            border-radius: 10px;
-            font-size: 14px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             border: none;
@@ -308,7 +574,7 @@
 
         .btn-secondary {
             background: var(--gray-200);
-            color: var(--gray-800);
+            color: var(--gray-700);
         }
 
         .btn-danger {
@@ -316,103 +582,245 @@
             color: var(--danger);
         }
 
-        .detail-teams {
+        .detail-info {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .team-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-top: 16px;
+            margin-bottom: 16px;
         }
 
         .team-box {
-            background: var(--gray-50);
-            padding: 12px;
+            background: white;
+            padding: 16px;
             border-radius: 12px;
         }
 
         .team-box h4 {
             font-size: 12px;
-            color: var(--gray-400);
             text-transform: uppercase;
-            margin-bottom: 8px;
+            color: var(--gray-400);
+            margin-bottom: 12px;
         }
 
-        .team-box ul {
-            list-style: none;
-        }
-
-        .team-box li {
-            font-size: 14px;
-            padding: 6px 0;
-            color: var(--gray-800);
-        }
-
-        .detail-actions {
+        .team-player {
             display: flex;
-            gap: 12px;
-            margin-top: 20px;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            font-size: 14px;
+            font-weight: 500;
         }
 
-        .detail-info {
-            background: var(--gray-50);
-            padding: 12px;
-            border-radius: 10px;
+        .team-player .status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: var(--primary-light);
+            color: var(--primary-dark);
         }
 
-        .detail-info p {
-            font-size: 13px;
-            color: var(--gray-600);
-            margin-bottom: 8px;
+        .team-player .status.pending {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .pending-section {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .pending-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--warning);
+        }
+
+        .pending-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .pending-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pending-actions button {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .pending-approve {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .pending-reject {
+            background: #FEE2E2;
+            color: var(--danger);
         }
 
         .toast {
             position: fixed;
-            bottom: 80px;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--gray-900);
             color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
+            padding: 14px 24px;
+            border-radius: 12px;
             font-size: 14px;
             z-index: 2000;
             opacity: 0;
             transition: opacity 0.3s;
+            max-width: 90%;
+            text-align: center;
         }
 
         .toast.show {
             opacity: 1;
         }
 
-        @media (max-width: 360px) {
-            .form-row {
-                grid-template-columns: 1fr;
+        .fixed-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .auth-modal .modal {
+            max-height: 80vh;
+        }
+
+        .auth-switch {
+            text-align: center;
+            padding: 0 20px 20px;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .auth-switch a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .user-badge {
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            position: fixed;
+            top: 12px;
+            right: 20px;
+            z-index: 101;
+        }
+
+        @media (max-width: 400px) {
+            .level-selector {
+                grid-template-columns: repeat(7, 1fr);
+            }
+            
+            .level-btn {
+                padding: 10px 4px;
+                font-size: 13px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">
+    <div class="user-badge" id="user-badge" onclick="handleUserBadgeClick()">Вход</div>
+
+    <div class="landing">
+        <div class="landing-logo">
             <svg viewBox="0 0 32 32" fill="none">
-                <circle cx="16" cy="16" r="14" stroke="#10B981" stroke-width="3"/>
-                <circle cx="16" cy="16" r="6" fill="#10B981"/>
+                <circle cx="16" cy="16" r="14" stroke="white" stroke-width="3"/>
+                <circle cx="16" cy="16" r="8" fill="white" opacity="0.3"/>
+                <circle cx="16" cy="16" r="4" fill="white"/>
             </svg>
-            Padel Court
+            <span>Padel Court</span>
         </div>
-        <div>
-            <span class="user-badge" id="user-badge" onclick="handleUserBadgeClick()" style="cursor:pointer;">Вход</span>
+        <h1>Играй в падел<br>с другими</h1>
+        <p>Создавай игры, находи партнёров и наслаждайся игрой на любом уровне</p>
+    </div>
+
+    <div class="features">
+        <div class="feature-item">
+            <div class="feature-icon">🎯</div>
+            <span>Любой уровень</span>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">👥</div>
+            <span>4 игрока</span>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">📅</div>
+            <span>Бронируй слот</span>
         </div>
     </div>
 
-    <div class="container">
-        <button class="create-btn" onclick="showCreateModal()">
+    <div class="cta-section">
+        <button class="cta-btn" onclick="showCreateModal()">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
             </svg>
             Создать игру
         </button>
+    </div>
 
-        <h2 class="section-title">Ближайшие игры</h2>
+    <div class="section">
+        <h2 class="section-title">
+            Ближайшие игры
+            <span class="count" id="games-count">0</span>
+        </h2>
         <div class="games-list" id="games-list">
             <div class="empty-state">Загрузка...</div>
         </div>
@@ -429,18 +837,54 @@
                     <label>Название</label>
                     <input type="text" id="game-title" required placeholder="Утренняя игра">
                 </div>
+                
+                <div class="form-group">
+                    <label>Уровень игры</label>
+                    <div class="level-selector" id="level-selector">
+                        <button type="button" class="level-btn" data-level="D">D</button>
+                        <button type="button" class="level-btn" data-level="D+">D+</button>
+                        <button type="button" class="level-btn" data-level="C">C</button>
+                        <button type="button" class="level-btn" data-level="C+">C+</button>
+                        <button type="button" class="level-btn" data-level="B">B</button>
+                        <button type="button" class="level-btn" data-level="A">A</button>
+                        <button type="button" class="level-btn active" data-level="all">все</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Тип игры</label>
+                    <div class="type-selector" id="type-selector">
+                        <button type="button" class="type-btn active" data-type="open">
+                            Открытая
+                            <small>Свободный вход</small>
+                        </button>
+                        <button type="button" class="type-btn" data-type="closed">
+                            Закрытая
+                            <small>Нужно подтверждение</small>
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label>Комментарий</label>
-                    <textarea id="game-description" placeholder="Уровень игры, что взять..."></textarea>
+                    <textarea id="game-description" placeholder="Что взять с собой, особые условия..."></textarea>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Начало</label>
-                        <input type="text" id="game-start" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Конец</label>
-                        <input type="text" id="game-end" required>
+                
+                <div class="form-group">
+                    <label>Дата и время</label>
+                    <div class="calendar-section">
+                        <div class="calendar-header">
+                            <div class="calendar-nav">
+                                <button type="button" onclick="changeMonth(-1)">&larr;</button>
+                                <span class="calendar-title" id="calendar-title"></span>
+                                <button type="button" onclick="changeMonth(1)">&rarr;</button>
+                            </div>
+                        </div>
+                        <div class="calendar-days" id="calendar-days"></div>
+                        <div class="time-slots">
+                            <div class="time-slots-label">Доступное время</div>
+                            <div class="time-slots-grid" id="time-slots"></div>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -485,7 +929,7 @@
             <div class="modal-footer">
                 <button class="btn btn-primary" id="auth-submit-btn" onclick="document.querySelector('#auth-modal form').requestSubmit()">Войти</button>
             </div>
-            <p style="text-align:center;padding:0 20px 20px;">
+            <p class="auth-switch">
                 <span id="auth-switch">Нет аккаунта? <a href="#" onclick="showAuth('register'); return false;">Регистрация</a></span>
             </p>
         </div>
@@ -498,9 +942,22 @@
     <script>
         const API_URL = '';
         let currentUser = null;
-        let startPicker, endPicker;
         let games = [];
         let showAuthModal = 'login';
+        
+        let selectedLevel = 'all';
+        let selectedType = 'open';
+        let selectedDate = null;
+        let selectedTime = null;
+        let currentMonth = new Date();
+        let occupiedSlots = [];
+
+        const TIME_SLOTS = [
+            '07:00', '08:00', '09:00', '10:00',
+            '11:00', '12:00', '13:00', '14:00',
+            '15:00', '16:00', '17:00', '18:00',
+            '19:00', '20:00', '21:00', '22:00'
+        ];
 
         function getAuthHeaders() {
             const userId = localStorage.getItem('user_id');
@@ -509,33 +966,23 @@
 
         async function init() {
             const userId = localStorage.getItem('user_id');
-            console.log('init: userId from storage:', userId);
             if (userId) {
                 try {
-                    console.log('init: checking /api/user/me with:', getAuthHeaders());
                     const response = await fetch(API_URL + '/api/user/me', { headers: getAuthHeaders() });
-                    console.log('init: /api/user/me response:', response.status);
                     if (response.ok) {
                         currentUser = await response.json();
-                        console.log('init: currentUser:', currentUser);
                         updateUserBadge();
                     } else {
-                        console.log('init: clearing user_id');
                         localStorage.removeItem('user_id');
                     }
                 } catch (e) {
-                    console.error('init: Auth check error:', e);
+                    console.error('Auth check error:', e);
                 }
             }
             await loadGames();
-            initPickers();
-        }
-
-        function updateUserBadge() {
-            const badge = document.getElementById('user-badge');
-            if (badge && currentUser) {
-                badge.textContent = currentUser.username;
-            }
+            initLevelSelector();
+            initTypeSelector();
+            renderCalendar();
         }
 
         function handleUserBadgeClick() {
@@ -548,25 +995,128 @@
             }
         }
 
-        function initPickers() {
-            startPicker = flatpickr("#game-start", {
-                locale: "ru",
-                enableTime: true,
-                minDate: "today",
-                dateFormat: "d.m.Y H:i",
-                onChange: function(selectedDates) {
-                    if (selectedDates[0]) {
-                        const end = new Date(selectedDates[0].getTime() + 60 * 60 * 1000);
-                        endPicker.setDate(end);
-                    }
-                }
-            });
+        function updateUserBadge() {
+            const badge = document.getElementById('user-badge');
+            if (badge && currentUser) {
+                badge.textContent = currentUser.username;
+            } else if (badge) {
+                badge.textContent = 'Вход';
+            }
+        }
 
-            endPicker = flatpickr("#game-end", {
-                locale: "ru",
-                enableTime: true,
-                minDate: "today",
-                dateFormat: "d.m.Y H:i"
+        function initLevelSelector() {
+            document.querySelectorAll('#level-selector .level-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#level-selector .level-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedLevel = btn.dataset.level;
+                });
+            });
+        }
+
+        function initTypeSelector() {
+            document.querySelectorAll('#type-selector .type-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#type-selector .type-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedType = btn.dataset.type;
+                });
+            });
+        }
+
+        function renderCalendar() {
+            const title = document.getElementById('calendar-title');
+            const daysContainer = document.getElementById('calendar-days');
+            
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'И��нь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            title.textContent = monthNames[currentMonth.getMonth()] + ' ' + currentMonth.getFullYear();
+            
+            const days = [];
+            const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+            const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+            let startDay = firstDay.getDay() - 1;
+            if (startDay < 0) startDay = 6;
+            
+            for (let i = 0; i < startDay; i++) {
+                days.push('<div class="calendar-day disabled"></div>');
+            }
+            
+            for (let d = 1; d <= lastDay.getDate(); d++) {
+                const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d);
+                const isPast = date < today;
+                const isToday = date.getTime() === today.getTime();
+                
+                days.push(`
+                    <div class="calendar-day ${isToday ? 'active' : ''} ${isPast ? 'disabled' : ''}" 
+                         data-date="${date.toISOString().split('T')[0]}"
+                         onclick="${!isPast ? `selectDate('${date.toISOString().split('T')[0]}')` : ''}">
+                        <div class="day-name">${dayNames[date.getDay() === 0 ? 6 : date.getDay() - 1]}</div>
+                        <div class="day-num">${d}</div>
+                    </div>
+                `);
+            }
+            
+            daysContainer.innerHTML = days.join('');
+            
+            if (!selectedDate) {
+                const todayStr = new Date().toISOString().split('T')[0];
+                selectDate(todayStr);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth.setMonth(currentMonth.getMonth() + delta);
+            renderCalendar();
+        }
+
+        async function selectDate(dateStr) {
+            selectedDate = dateStr;
+            selectedTime = null;
+            
+            document.querySelectorAll('.calendar-day').forEach(d => {
+                d.classList.remove('active');
+                if (d.dataset.date === dateStr) d.classList.add('active');
+            });
+            
+            await loadOccupiedSlots();
+            renderTimeSlots();
+        }
+
+        async function loadOccupiedSlots() {
+            if (!selectedDate) return;
+            
+            try {
+                const response = await fetch(API_URL + '/api/slots?date=' + selectedDate);
+                occupiedSlots = await response.json();
+            } catch (e) {
+                occupiedSlots = [];
+            }
+        }
+
+        function renderTimeSlots() {
+            const container = document.getElementById('time-slots');
+            
+            container.innerHTML = TIME_SLOTS.map(time => {
+                const isOccupied = occupiedSlots.some(s => s.start_time === time);
+                return `
+                    <div class="time-slot ${isOccupied ? 'occupied' : ''} ${selectedTime === time ? 'selected' : ''}" 
+                         data-time="${time}"
+                         onclick="${!isOccupied ? `selectTime('${time}')` : ''}">
+                        ${time}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectTime(time) {
+            selectedTime = time;
+            document.querySelectorAll('.time-slot').forEach(s => {
+                s.classList.remove('selected');
+                if (s.dataset.time === time) s.classList.add('selected');
             });
         }
 
@@ -621,8 +1171,6 @@
         async function logout() {
             localStorage.removeItem('user_id');
             currentUser = null;
-            const badge = document.getElementById('user-badge');
-            if (badge) badge.textContent = 'Гость';
             await loadGames();
         }
 
@@ -633,11 +1181,9 @@
                     games = await response.json();
                 } else {
                     games = [];
-                    console.log('loadGames error:', response.status);
                 }
                 renderGames();
             } catch (e) {
-                console.error('Load error:', e);
                 games = [];
                 renderGames();
             }
@@ -645,6 +1191,8 @@
 
         function renderGames() {
             const container = document.getElementById('games-list');
+            document.getElementById('games-count').textContent = games.length;
+            
             if (games.length === 0) {
                 container.innerHTML = '<div class="empty-state">Нет игр. Создайте первую!</div>';
                 return;
@@ -654,23 +1202,30 @@
                 <div class="game-card" onclick="showDetail(${game.id})">
                     <div class="game-card-header">
                         <span class="game-card-title">${escapeHtml(game.title)}</span>
-                        <span class="game-status ${game.is_full ? 'status-full' : 'status-open'}">
-                            ${game.is_full ? 'Заполнено' : 'Открыто'}
-                        </span>
+                        <div class="game-badges">
+                            <span class="badge badge-${game.game_type}">${game.game_type === 'open' ? 'Открытая' : 'Закрытая'}</span>
+                            ${game.is_full ? '<span class="badge badge-full">Заполнено</span>' : ''}
+                            ${game.level !== 'all' ? `<span class="badge badge-level">${game.level}</span>` : ''}
+                        </div>
                     </div>
                     <div class="game-meta">
                         <span>📅 ${formatDate(game.start_time)}</span>
                         <span>👥 ${game.player_count}/4</span>
                     </div>
-                    ${game.description ? `<div class="game-description">${escapeHtml(game.description)}</div>` : ''}
-                    <div class="game-creator">От ${escapeHtml(game.creator.username)}</div>
+                    <div class="game-players">
+                        ${game.players.map(p => `
+                            <div class="player-dot ${!p.approved ? 'pending' : ''}" title="${escapeHtml(p.username)}">
+                                ${p.username.charAt(0).toUpperCase()}
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             `).join('');
         }
 
         function showCreateModal() {
             if (!currentUser) {
-                showToast('Войдите через Telegram');
+                showToast('Войдите через аккаунт');
                 return;
             }
             document.getElementById('create-modal').classList.add('active');
@@ -678,15 +1233,29 @@
 
         function closeCreateModal() {
             document.getElementById('create-modal').classList.remove('active');
+            selectedTime = null;
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
         }
 
         async function createGame(e) {
             e.preventDefault();
+            
+            if (!selectedTime) {
+                showToast('Выберите время');
+                return;
+            }
+
+            const startTime = selectedDate + ' ' + selectedTime;
+            const endHour = parseInt(selectedTime.split(':')[0]) + 1;
+            const endTime = selectedDate + ' ' + (endHour < 10 ? '0' + endHour : endHour) + ':00';
+
             const data = {
                 title: document.getElementById('game-title').value,
                 description: document.getElementById('game-description').value,
-                start_time: document.getElementById('game-start').value,
-                end_time: document.getElementById('game-end').value
+                level: selectedLevel,
+                game_type: selectedType,
+                start_time: startTime,
+                end_time: endTime
             };
 
             try {
@@ -717,26 +1286,55 @@
             if (!game) return;
 
             const isParticipant = currentUser && game.players.some(p => p.id === currentUser.id);
+            const isCreator = currentUser && game.creator.id === currentUser.id;
 
             document.getElementById('detail-title').textContent = game.title;
             document.getElementById('detail-content').innerHTML = `
                 <div class="detail-info">
-                    <p><strong>Время:</strong> ${formatDate(game.start_time)}</p>
-                    <p><strong>Создатель:</strong> @${escapeHtml(game.creator.username)}</p>
-                    ${game.description ? `<p><strong>Комментарий:</strong> ${escapeHtml(game.description)}</p>` : ''}
+                    <div class="detail-row">
+                        <span class="detail-label">Дата и время</span>
+                        <span class="detail-value">${formatDate(game.start_time)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Тип</span>
+                        <span class="detail-value">${game.game_type === 'open' ? 'Открытая' : 'Закрытая'}</span>
+                    </div>
+                    ${game.level !== 'all' ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Уровень</span>
+                        <span class="detail-value">${game.level}</span>
+                    </div>
+                    ` : ''}
+                    <div class="detail-row">
+                        <span class="detail-label">Создатель</span>
+                        <span class="detail-value">@${escapeHtml(game.creator.username)}</span>
+                    </div>
+                    ${game.description ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Комментарий</span>
+                        <span class="detail-value">${escapeHtml(game.description)}</span>
+                    </div>
+                    ` : ''}
                 </div>
-                <div class="detail-teams">
+                
+                <div class="team-section">
                     <div class="team-box">
                         <h4>Команда A</h4>
-                        <ul>
-                            ${game.players.filter(p => p.team === 'team_a').map(p => `<li>@${escapeHtml(p.username)}</li>`).join('') || '<li>—</li>'}
-                        </ul>
+                        ${game.players.filter(p => p.team === 'team_a').map(p => `
+                            <div class="team-player">
+                                @${escapeHtml(p.username)}
+                                ${!p.approved ? '<span class="status pending">Ожидает</span>' : ''}
+                            </div>
+                        `).join('') || '<div style="color:var(--gray-400);font-size:13px;">—</div>'}
                     </div>
                     <div class="team-box">
                         <h4>Команда B</h4>
-                        <ul>
-                            ${game.players.filter(p => p.team === 'team_b').map(p => `<li>@${escapeHtml(p.username)}</li>`).join('') || '<li>—</li>'}
-                        </ul>
+                        ${game.players.filter(p => p.team === 'team_b').map(p => `
+                            <div class="team-player">
+                                @${escapeHtml(p.username)}
+                                ${!p.approved ? '<span class="status pending">Ожидает</span>' : ''}
+                            </div>
+                        `).join('') || '<div style="color:var(--gray-400);font-size:13px;">—</div>'}
                     </div>
                 </div>
             `;
@@ -744,10 +1342,10 @@
             let actions = '';
             if (!isParticipant && !game.is_full && currentUser) {
                 actions = `<button class="btn btn-primary" onclick="joinGame(${id})">Присоединиться</button>`;
-            } else if (isParticipant && game.creator.id !== currentUser?.id) {
+            } else if (isParticipant && !isCreator) {
                 actions = `<button class="btn btn-danger" onclick="leaveGame(${id})">Покинуть</button>`;
-            } else if (game.creator.id === currentUser?.id) {
-                actions = `<button class="btn btn-danger" onclick="deleteGame(${id})">Удалить</button>`;
+            } else if (isCreator) {
+                actions = `<button class="btn btn-danger" onclick="deleteGame(${id})">Удалить игру</button>`;
             }
             document.getElementById('detail-actions').innerHTML = actions;
 
@@ -769,9 +1367,10 @@
                     showToast(error.error);
                     return;
                 }
+                const data = await response.json();
                 closeDetailModal();
                 await loadGames();
-                showToast('Вы присоединились!');
+                showToast(data.approved ? 'Вы присоединились!' : 'Ожидайте подтверждения');
             } catch (e) {
                 showToast('Ошибка');
             }
@@ -780,9 +1379,9 @@
         async function leaveGame(id) {
             try {
                 await fetch(API_URL + '/api/games/' + id + '/leave', { 
-                method: 'POST',
-                headers: getAuthHeaders()
-            });
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
                 closeDetailModal();
                 await loadGames();
                 showToast('Вы покинули игру');
@@ -795,9 +1394,9 @@
             if (confirm('Удалить игру?')) {
                 try {
                     await fetch(API_URL + '/api/games/' + id, { 
-                    method: 'DELETE',
-                    headers: getAuthHeaders()
-                });
+                        method: 'DELETE',
+                        headers: getAuthHeaders()
+                    });
                     closeDetailModal();
                     await loadGames();
                     showToast('Игра удалена');
@@ -816,7 +1415,8 @@
 
         function formatDate(dateStr) {
             const date = new Date(dateStr);
-            return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+            return date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
         }
 
         function escapeHtml(text) {

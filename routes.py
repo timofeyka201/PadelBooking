@@ -53,7 +53,7 @@ def register():
         password = data.get('password', '')
         first_name = data.get('first_name', '')
 
-        app.logger.error(f"REGISTER: username={username}")
+        app.logger.error(f"REGISTER: username='{username}'")
 
         if not username or not password:
             return jsonify({'error': 'Введите имя пользователя и пароль'}), 400
@@ -61,16 +61,18 @@ def register():
         if len(password) < 4:
             return jsonify({'error': 'Пароль должен быть минимум 4 символа'}), 400
 
-        existing = User.query.filter_by(username=username).first()
+        # Check existing - filter out empty usernames
+        existing = User.query.filter(User.username != None).filter_by(username=username).first()
         if existing:
             return jsonify({'error': 'Это имя пользователя уже занято'}), 400
 
         user = User(username=username, first_name=first_name)
         user.set_password(password)
+        
+        app.logger.error(f"REGISTER: adding user to session")
         db.session.add(user)
         db.session.commit()
-
-        app.logger.error(f"REGISTER: success id={user.id}")
+        app.logger.error(f"REGISTER: committed, id={user.id}")
 
         return jsonify({'success': True, 'user': {
             'id': user.id,

@@ -10,6 +10,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ECHO'] = False
 
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
@@ -26,7 +27,6 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN')
 
 
 class User(db.Model):
-    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
@@ -62,14 +62,13 @@ class User(db.Model):
 
 
 class Game(db.Model):
-    __tablename__ = 'games'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default='scheduled')
-    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     players = db.relationship('GamePlayer', backref='game', lazy='dynamic', cascade='all, delete-orphan')
@@ -82,10 +81,9 @@ class Game(db.Model):
 
 
 class GamePlayer(db.Model):
-    __tablename__ = 'game_players'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
     team = db.Column(db.String(20))
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -98,6 +96,20 @@ def load_user(user_id):
 def init_db():
     try:
         with app.app_context():
+            from sqlalchemy import text, inspect
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            
+            # Add password_hash to existing user table
+            try:
+                if 'user' in tables:
+                    columns = [c['name'] for c in inspector.get_columns('user')]
+                    if 'password_hash' not in columns:
+                        db.session.execute(text('ALTER TABLE "user" ADD COLUMN password_hash VARCHAR(200)'))
+                        db.session.commit()
+            except Exception as e:
+                app.logger.error(f"Migration error: {e}")
+            
             db.create_all()
     except Exception as e:
         app.logger.error(f"DB init error: {e}")

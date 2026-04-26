@@ -315,7 +315,7 @@ def create_game():
 @app.route('/api/games/<int:game_id>')
 def get_game(game_id):
     game = Game.query.get_or_404(game_id)
-return jsonify({
+    return jsonify({
         'id': game.id,
         'title': game.title,
         'description': game.description,

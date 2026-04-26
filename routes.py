@@ -271,6 +271,7 @@ def get_games():
 def create_game():
     from app import app
     current_user = get_user_from_request()
+    app.logger.error(f"create_game: user_id = {current_user}")
     if not current_user:
         return jsonify({'error': 'Not authenticated'}), 401
 
@@ -294,10 +295,8 @@ def create_game():
 
     try:
         game = Game(
-            title=data.get('title', 'Игра') or 'Игра',
+            title=data.get('title') or 'Игра',
             description=data.get('description', ''),
-            level=data.get('level', 'all'),
-            game_type=data.get('game_type', 'open'),
             start_time=start_time,
             end_time=end_time,
             creator_id=current_user.id
@@ -309,7 +308,7 @@ def create_game():
         db.session.add(player)
         db.session.commit()
 
-        app.logger.error(f"game created: {game.id}")
+        app.logger.error(f"SUCCESS: game {game.id} created!")
         return jsonify({'success': True, 'game_id': game.id})
     except Exception as e:
         app.logger.error(f"DB error: {e}")

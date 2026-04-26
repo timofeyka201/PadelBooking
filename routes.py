@@ -46,11 +46,14 @@ def health():
                 db.session.commit()
             except: pass
         
-        # Fix telegram_id to allow NULL
+        # Fix telegram_id to allow NULL - set default ''
         try:
+            db.session.execute(text('UPDATE "user" SET telegram_id = \'\' WHERE telegram_id IS NULL'))
+            db.session.execute(text('ALTER TABLE "user" ALTER COLUMN telegram_id SET DEFAULT \'\''))
             db.session.execute(text('ALTER TABLE "user" ALTER COLUMN telegram_id DROP NOT NULL'))
             db.session.commit()
-        except: pass
+        except Exception as e:
+            app.logger.error(f"Fix telegram_id error: {e}")
         
         result = db.session.execute(text('SELECT COUNT(*) FROM "user"')).scalar()
         return jsonify({'status': 'ok', 'users': result})
@@ -163,7 +166,9 @@ def logout():
 
 @app.route('/api/user/me')
 def get_current_user():
+    from app import app
     user_id = request.headers.get('X-User-ID')
+    app.logger.error(f"/api/user/me: X-User-ID={user_id}")
     if not user_id:
         user_id = request.args.get('user_id')
     if not user_id:
@@ -171,8 +176,10 @@ def get_current_user():
     
     user = User.query.get(int(user_id))
     if not user:
+        app.logger.error(f"/api/user/me: user {user_id} not found")
         return jsonify({'error': 'Not authenticated'}), 401
     
+    app.logger.error(f"/api/user/me: found user {user.id}, {user.username}")
     return jsonify({
         'id': user.id,
         'username': user.username,

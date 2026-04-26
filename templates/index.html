@@ -509,17 +509,22 @@
 
         async function init() {
             const userId = localStorage.getItem('user_id');
+            console.log('init: userId from storage:', userId);
             if (userId) {
                 try {
+                    console.log('init: checking /api/user/me with:', getAuthHeaders());
                     const response = await fetch(API_URL + '/api/user/me', { headers: getAuthHeaders() });
+                    console.log('init: /api/user/me response:', response.status);
                     if (response.ok) {
                         currentUser = await response.json();
+                        console.log('init: currentUser:', currentUser);
                         updateUserBadge();
                     } else {
+                        console.log('init: clearing user_id');
                         localStorage.removeItem('user_id');
                     }
                 } catch (e) {
-                    console.error('Auth check error:', e);
+                    console.error('init: Auth check error:', e);
                 }
             }
             await loadGames();

@@ -27,13 +27,21 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN')
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    telegram_id = db.Column(db.String(100), unique=True, nullable=False)
-    username = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
     first_name = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     games_created = db.relationship('Game', backref='creator', lazy='dynamic', foreign_keys='Game.creator_id')
     participations = db.relationship('GamePlayer', backref='player', lazy='dynamic')
+
+    def set_password(self, password):
+        import hashlib
+        self.password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+    def check_password(self, password):
+        import hashlib
+        return self.password_hash == hashlib.sha256(password.encode()).hexdigest()
 
     def has_active_game(self):
         now = datetime.utcnow()

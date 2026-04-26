@@ -32,24 +32,48 @@ def login():
     return render_template('login.html')
 
 
-@app.route('/api/auth/telegram', methods=['POST'])
-def telegram_auth():
+@app.route('/api/auth/register', methods=['POST'])
+def register():
     try:
         data = request.get_json()
-        telegram_id = str(data.get('id', ''))
-        username = data.get('username', 'Unknown')
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
         first_name = data.get('first_name', '')
 
-        user = User.query.filter_by(telegram_id=telegram_id).first()
+        if not username or not password:
+            return jsonify({'error': 'Введите имя пользователя и пароль'}), 400
 
-        if not user:
-            user = User(
-                telegram_id=telegram_id,
-                username=username,
-                first_name=first_name
-            )
-            db.session.add(user)
-            db.session.commit()
+        if len(password) < 4:
+            return jsonify({'error': 'Пароль должен быть минимум 4 символа'}), 400
+
+        existing = User.query.filter_by(username=username).first()
+        if existing:
+            return jsonify({'error': 'Это имя пользователя уже занято'}), 400
+
+        user = User(username=username, first_name=first_name)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+
+        return jsonify({'success': True, 'user': {
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name
+        }})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def login_api():
+    try:
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+
+        user = User.query.filter_by(username=username).first()
+        if not user or not user.check_password(password):
+            return jsonify({'error': 'Неверное имя пользователя или пароль'}), 401
 
         return jsonify({'success': True, 'user': {
             'id': user.id,
@@ -67,13 +91,13 @@ def logout():
 
 @app.route('/api/user/me')
 def get_current_user():
-    telegram_id = request.headers.get('X-Telegram-ID')
-    if not telegram_id:
-        telegram_id = request.args.get('telegram_id')
-    if not telegram_id:
+    user_id = request.headers.get('X-User-ID')
+    if not user_id:
+        user_id = request.args.get('user_id')
+    if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
     
-    user = User.query.filter_by(telegram_id=str(telegram_id)).first()
+    user = User.query.get(int(user_id))
     if not user:
         return jsonify({'error': 'Not authenticated'}), 401
     

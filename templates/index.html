@@ -399,7 +399,9 @@
             </svg>
             Padel Court
         </div>
-        <div class="user-badge" id="user-badge">Загрузка...</div>
+        <div>
+            <span class="user-badge" id="user-badge" onclick="handleUserBadgeClick()" style="cursor:pointer;">Вход</span>
+        </div>
     </div>
 
     <div class="container">
@@ -460,93 +462,88 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="auth-modal-title">Вход</h3>
+                <button class="modal-close" onclick="closeAuth()">&times;</button>
+            </div>
+            <form class="modal-body" onsubmit="submitAuth(event)">
+                <div class="form-group">
+                    <label>Имя пользователя</label>
+                    <input type="text" id="auth-username" required placeholder="Придумайте логин">
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="auth-password" required placeholder="Минимум 4 символа">
+                </div>
+                <div class="form-group" id="firstname-group" style="display:none;">
+                    <label>Ваше имя</label>
+                    <input type="text" id="auth-firstname" placeholder="Как к вам обращаться">
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="auth-submit-btn" onclick="document.querySelector('#auth-modal form').requestSubmit()">Войти</button>
+            </div>
+            <p style="text-align:center;padding:0 20px 20px;">
+                <span id="auth-switch">Нет аккаунта? <a href="#" onclick="showAuth('register'); return false;">Регистрация</a></span>
+            </p>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
     <script>
         const API_URL = '';
-        let tg = window.Telegram?.WebApp;
         let currentUser = null;
         let startPicker, endPicker;
         let games = [];
+        let showAuthModal = 'login';
 
         function getAuthHeaders() {
-            const id = localStorage.getItem('telegram_id');
-            return id ? { 'X-Telegram-ID': id } : {};
+            const userId = localStorage.getItem('user_id');
+            return userId ? { 'X-User-ID': userId } : {};
         }
 
         async function init() {
-            console.log('=== INIT STARTED ===');
-            
-            let telegramId = null;
-            let telegramUser = null;
-            
-            // Try Telegram WebApp first
-            if (tg) {
-                tg.ready();
-                tg.expand();
-                const user = tg?.initDataUnsafe?.user;
-                if (user?.id) {
-                    telegramId = user.id;
-                    telegramUser = user;
-                    console.log('From Telegram:', telegramId, user);
-                }
-            }
-            
-            // Fallback to URL
-            if (!telegramId) {
-                const urlParams = new URLSearchParams(window.location.search);
-                telegramId = urlParams.get('user_id');
-                console.log('From URL user_id:', telegramId);
-            }
-            
-            // Fallback to localStorage
-            if (!telegramId) {
-                telegramId = localStorage.getItem('telegram_id');
-                console.log('From localStorage:', telegramId);
-            }
-
-            console.log('Final telegramId:', telegramId);
-
-            if (telegramId) {
+            const userId = localStorage.getItem('user_id');
+            if (userId) {
                 try {
-                    const authData = { 
-                        id: String(telegramId), 
-                        username: telegramUser?.username || 'user', 
-                        first_name: telegramUser?.first_name || 'User',
-                        last_name: telegramUser?.last_name || ''
-                    };
-                    console.log('Sending auth request:', authData);
-                    
-                    const response = await fetch(API_URL + '/api/auth/telegram', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(authData)
-                    });
-                    console.log('Auth response:', response.status);
-                    
+                    const response = await fetch(API_URL + '/api/user/me', { headers: getAuthHeaders() });
                     if (response.ok) {
-                        const data = await response.json();
-                        console.log('Auth success:', data);
-                        currentUser = data.user;
-                        localStorage.setItem('telegram_id', String(telegramId));
-                        const badge = document.getElementById('user-badge');
-                        if (badge) badge.textContent = '@' + currentUser.username;
-                        console.log('Set user badge');
+                        currentUser = await response.json();
+                        updateUserBadge();
                     } else {
-                        const err = await response.json();
-                        console.error('Auth error:', err);
+                        localStorage.removeItem('user_id');
                     }
                 } catch (e) {
-                    console.error('Auth error:', e);
+                    console.error('Auth check error:', e);
+                }
+            }
+            await loadGames();
+            initPickers();
+        }
+
+        function updateUserBadge() {
+            const badge = document.getElementById('user-badge');
+            if (badge && currentUser) {
+                badge.textContent = currentUser.username;
+            }
+        }
+
+        function handleUserBadgeClick() {
+            if (currentUser) {
+                if (confirm('Выйти из аккаунта?')) {
+                    logout();
                 }
             } else {
-                console.log('NO USER ID FOUND!');
+                showAuth('login');
             }
+        }
 
-            await loadGames();
-
+        function initPickers() {
             startPicker = flatpickr("#game-start", {
                 locale: "ru",
                 enableTime: true,
@@ -566,6 +563,62 @@
                 minDate: "today",
                 dateFormat: "d.m.Y H:i"
             });
+        }
+
+        function showAuth(mode) {
+            showAuthModal = mode;
+            document.getElementById('auth-modal-title').textContent = mode === 'login' ? 'Вход' : 'Регистрация';
+            document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Войти' : 'Регистрация';
+            document.getElementById('firstname-group').style.display = mode === 'register' ? 'block' : 'none';
+            document.getElementById('auth-switch').innerHTML = mode === 'login' 
+                ? 'Нет аккаунта? <a href="#" onclick="showAuth(\'register\'); return false;">Регистрация</a>'
+                : 'Есть аккаунт? <a href="#" onclick="showAuth(\'login\'); return false;">Вход</a>';
+            document.getElementById('auth-modal').classList.add('active');
+        }
+
+        function closeAuth() {
+            document.getElementById('auth-modal').classList.remove('active');
+        }
+
+        async function submitAuth(e) {
+            e.preventDefault();
+            const username = document.getElementById('auth-username').value;
+            const password = document.getElementById('auth-password').value;
+            const firstName = document.getElementById('auth-firstname').value;
+            
+            const endpoint = showAuthModal === 'login' ? '/api/auth/login' : '/api/auth/register';
+            const body = showAuthModal === 'login' 
+                ? { username, password }
+                : { username, password, first_name: firstName };
+
+            try {
+                const response = await fetch(API_URL + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    currentUser = data.user;
+                    localStorage.setItem('user_id', String(currentUser.id));
+                    updateUserBadge();
+                    closeAuth();
+                    await loadGames();
+                } else {
+                    showToast(data.error || 'Ошибка');
+                }
+            } catch (e) {
+                showToast('Ошибка соединения');
+            }
+        }
+
+        async function logout() {
+            localStorage.removeItem('user_id');
+            currentUser = null;
+            const badge = document.getElementById('user-badge');
+            if (badge) badge.textContent = 'Гость';
+            await loadGames();
         }
 
         async function loadGames() {

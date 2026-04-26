@@ -263,8 +263,10 @@ def create_game():
         start_time_str = data.get('start_time', '')
         end_time_str = data.get('end_time', '')
         
-        start_time = datetime.strptime(start_time_str, '%d.%m.%Y %H:%M')
-        end_time = datetime.strptime(end_time_str, '%d.%m.%Y %H:%M')
+        start_naive = datetime.strptime(start_time_str, '%d.%m.%Y %H:%M')
+        end_naive = datetime.strptime(end_time_str, '%d.%m.%Y %H:%M')
+        start_time = start_naive.replace(tzinfo=timezone.utc)
+        end_time = end_naive.replace(tzinfo=timezone.utc)
         app.logger.error(f"create_game: parsed start={start_time}, end={end_time}")
     except Exception as e:
         app.logger.error(f"create_game: date error: {e}")
@@ -435,7 +437,6 @@ def get_slots():
         return jsonify([])
 
     try:
-        from datetime import timezone
         start_of_day = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=timezone.utc)
         end_of_day = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=timezone.utc)
 

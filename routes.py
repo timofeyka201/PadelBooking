@@ -1,7 +1,13 @@
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
 from app import app, db, User, Game, GamePlayer
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+def format_datetime(dt):
+    if dt.tzinfo:
+        return dt.replace(tzinfo=None).isoformat()
+    return dt.isoformat()
 
 
 def verify_telegram_data(data):
@@ -199,30 +205,47 @@ from datetime import datetime, timezone
 
 @app.route('/api/games')
 def get_games():
-    now = datetime.now(timezone.utc)
-    games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
-    return jsonify([{
-        'id': g.id,
-        'title': g.title,
-        'description': g.description,
-        'level': g.level,
-        'game_type': g.game_type,
-        'start_time': g.start_time.isoformat(),
-        'end_time': g.end_time.isoformat(),
-        'status': g.status,
-        'creator': {
-            'id': g.creator.id,
-            'username': g.creator.username
-        },
-        'player_count': g.get_player_count(),
-        'is_full': g.is_full(),
-        'players': [{
-            'id': p.player.id,
-            'username': p.player.username,
-            'team': p.team,
-            'approved': p.approved
-        } for p in g.players]
-    } for g in games])
+    try:
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
+        
+        def format_time(dt):
+            try:
+                if dt.tzinfo:
+                    return dt.replace(tzinfo=None).isoformat()
+                return dt.isoformat()
+            except Exception as e:
+                app.logger.error(f"format_time error: {e}, dt={dt}, type={type(dt)}")
+                return str(dt)
+        
+        return jsonify([{
+            'id': g.id,
+            'title': g.title,
+            'description': g.description,
+            'level': g.level,
+            'game_type': g.game_type,
+            'start_time': format_time(g.start_time),
+            'end_time': format_time(g.end_time),
+            'status': g.status,
+            'creator': {
+                'id': g.creator.id,
+                'username': g.creator.username
+            },
+            'player_count': g.get_player_count(),
+            'is_full': g.is_full(),
+            'players': [{
+                'id': p.player.id,
+                'username': p.player.username,
+                'team': p.team,
+                'approved': p.approved
+            } for p in g.players]
+        } for g in games])
+    except Exception as e:
+        app.logger.error(f"get_games error: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/games', methods=['POST'])
@@ -281,8 +304,8 @@ def get_game(game_id):
         'description': game.description,
         'level': game.level,
         'game_type': game.game_type,
-        'start_time': game.start_time.isoformat(),
-        'end_time': game.end_time.isoformat(),
+        'start_time': format_datetime(game.start_time),
+        'end_time': format_datetime(game.end_time),
         'status': game.status,
         'creator': {
             'id': game.creator.id,
@@ -476,13 +499,13 @@ def my_games():
         'created': [{
             'id': g.id,
             'title': g.title,
-            'start_time': g.start_time.isoformat(),
+            'start_time': format_datetime(g.start_time),
             'status': g.status
         } for g in created],
         'participating': [{
             'id': g.id,
             'title': g.title,
-            'start_time': g.start_time.isoformat(),
+            'start_time': format_datetime(g.start_time),
             'status': g.status
         } for g in participating]
     })

@@ -5,9 +5,14 @@ from datetime import datetime, timezone
 
 
 def format_datetime(dt):
-    if dt.tzinfo:
-        return dt.replace(tzinfo=None).isoformat()
-    return dt.isoformat()
+    try:
+        if dt.tzinfo:
+            return dt.replace(tzinfo=None).isoformat()
+        return dt.isoformat()
+    except Exception as e:
+        from app import app
+        app.logger.error(f"format_datetime error: {e}, dt={dt}, type={type(dt)}")
+        return str(dt)
 
 
 def verify_telegram_data(data):
@@ -206,18 +211,8 @@ from datetime import datetime, timezone
 @app.route('/api/games')
 def get_games():
     try:
-        from datetime import timezone
         now = datetime.now(timezone.utc)
         games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
-        
-        def format_time(dt):
-            try:
-                if dt.tzinfo:
-                    return dt.replace(tzinfo=None).isoformat()
-                return dt.isoformat()
-            except Exception as e:
-                app.logger.error(f"format_time error: {e}, dt={dt}, type={type(dt)}")
-                return str(dt)
         
         return jsonify([{
             'id': g.id,
@@ -225,8 +220,8 @@ def get_games():
             'description': g.description,
             'level': g.level,
             'game_type': g.game_type,
-            'start_time': format_time(g.start_time),
-            'end_time': format_time(g.end_time),
+            'start_time': format_datetime(g.start_time),
+            'end_time': format_datetime(g.end_time),
             'status': g.status,
             'creator': {
                 'id': g.creator.id,

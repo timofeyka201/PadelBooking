@@ -224,15 +224,18 @@ from datetime import datetime
 @app.route('/api/games')
 def get_games():
     try:
-        now = datetime.utcnow()
-        app.logger.error(f"get_games: now = {now}")
+        # Show ALL games for debugging
+        all_games = Game.query.all()
+        app.logger.error(f"get_games: TOTAL in DB = {len(all_games)}")
         
-        # Show games starting from 1 hour ago
+        for g in all_games:
+            app.logger.error(f"  Game {g.id}: {g.title}, start={g.start_time}, creator={g.creator_id}")
+        
         from datetime import timedelta
+        now = datetime.utcnow()
         cutoff = now - timedelta(hours=1)
         
         games = Game.query.filter(Game.start_time >= cutoff).order_by(Game.start_time).all()
-        app.logger.error(f"get_games: found {len(games)} games")
         
         result = []
         for g in games:
@@ -257,14 +260,11 @@ def get_games():
                     } for p in g.players]
                 })
             except Exception as e:
-                app.logger.error(f"ERROR processing game {g.id}: {e}")
+                app.logger.error(f"ERROR: {e}")
         
-        app.logger.error(f"get_games: returning {len(result)} games")
         return jsonify(result)
     except Exception as e:
-        app.logger.error(f"get_games EXCEPTION: {e}")
-        import traceback
-        app.logger.error(traceback.format_exc())
+        app.logger.error(f"EXCEPTION: {e}")
         return jsonify([])
 
 

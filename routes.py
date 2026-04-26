@@ -38,6 +38,16 @@ def health():
         from sqlalchemy import text, inspect
         inspector = inspect(db.engine)
         columns = [c['name'] for c in inspector.get_columns('user')]
+        
+        # Auto-add password_hash if missing
+        if 'password_hash' not in columns:
+            try:
+                db.session.execute(text('ALTER TABLE "user" ADD COLUMN password_hash VARCHAR(200)'))
+                db.session.commit()
+                columns.append('password_hash')
+            except Exception as e:
+                app.logger.error(f"Auto-migrate error: {e}")
+        
         result = db.session.execute(text('SELECT COUNT(*) FROM "user"')).scalar()
         return jsonify({'status': 'ok', 'users': result, 'columns': columns})
     except Exception as e:

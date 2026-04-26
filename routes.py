@@ -283,8 +283,24 @@ def create_game():
         start_time_str = data.get('start_time', '')
         end_time_str = data.get('end_time', '')
         
-        start_naive = datetime.strptime(start_time_str, '%d.%m.%Y %H:%M')
-        end_naive = datetime.strptime(end_time_str, '%d.%m.%Y %H:%M')
+        if ' ' in start_time_str:
+            date_part, time_part = start_time_str.split(' ')
+            if '-' in date_part:
+                start_naive = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M')
+            else:
+                start_naive = datetime.strptime(start_time_str, '%d.%m.%Y %H:%M')
+        else:
+            start_naive = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+        
+        if ' ' in end_time_str:
+            date_part, time_part = end_time_str.split(' ')
+            if '-' in date_part:
+                end_naive = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M')
+            else:
+                end_naive = datetime.strptime(end_time_str, '%d.%m.%Y %H:%M')
+        else:
+            end_naive = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M')
+        
         start_time = start_naive.replace(tzinfo=timezone.utc)
         end_time = end_naive.replace(tzinfo=timezone.utc)
         app.logger.error(f"create_game: parsed start={start_time}, end={end_time}")

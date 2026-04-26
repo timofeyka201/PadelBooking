@@ -55,7 +55,8 @@ class User(db.Model):
 
     def has_active_game(self):
         try:
-            now = datetime.now(timezone.utc)
+            from datetime import datetime
+            now = datetime.utcnow()
             return Game.query.join(GamePlayer).filter(
                 GamePlayer.user_id == self.id,
                 Game.start_time > now,
@@ -66,7 +67,8 @@ class User(db.Model):
 
     def has_created_game(self):
         try:
-            now = datetime.now(timezone.utc)
+            from datetime import datetime
+            now = datetime.utcnow()
             return Game.query.filter(
                 Game.creator_id == self.id,
                 Game.start_time > now,

@@ -224,7 +224,7 @@ from datetime import datetime, timezone
 @app.route('/api/games')
 def get_games():
     try:
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
         
         result = []
@@ -289,26 +289,17 @@ def create_game():
         start_time_str = data.get('start_time', '')
         end_time_str = data.get('end_time', '')
         
-        if ' ' in start_time_str:
-            date_part, time_part = start_time_str.split(' ')
-            if '-' in date_part:
-                start_naive = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M')
-            else:
-                start_naive = datetime.strptime(start_time_str, '%d.%m.%Y %H:%M')
-        else:
-            start_naive = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+        if not start_time_str or not end_time_str:
+            return jsonify({'error': 'Укажите дату и время'}), 400
         
-        if ' ' in end_time_str:
-            date_part, time_part = end_time_str.split(' ')
-            if '-' in date_part:
-                end_naive = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M')
-            else:
-                end_naive = datetime.strptime(end_time_str, '%d.%m.%Y %H:%M')
-        else:
-            end_naive = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M')
+        start_time = datetime.fromisoformat(start_time_str.replace(' ', 'T'))
+        end_time = datetime.fromisoformat(end_time_str.replace(' ', 'T'))
         
-        start_time = start_naive.replace(tzinfo=timezone.utc)
-        end_time = end_naive.replace(tzinfo=timezone.utc)
+        if start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=timezone.utc)
+        if end_time.tzinfo is None:
+            end_time = end_time.replace(tzinfo=timezone.utc)
+        
         app.logger.error(f"create_game: parsed start={start_time}, end={end_time}")
     except Exception as e:
         app.logger.error(f"create_game: date error: {e}")
@@ -486,8 +477,8 @@ def get_slots():
         return jsonify([])
 
     try:
-        start_of_day = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=timezone.utc)
-        end_of_day = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=timezone.utc)
+        start_of_day = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+        end_of_day = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=timezone.utc)
 
         games = Game.query.filter(
             Game.start_time >= start_of_day,
@@ -496,19 +487,15 @@ def get_slots():
 
         slots = []
         for g in games:
-            start_ts = g.start_time.replace(tzinfo=None) if g.start_time.tzinfo else g.start_time
-            end_ts = g.end_time.replace(tzinfo=None) if g.end_time.tzinfo else g.end_time
             slots.append({
-                'start_time': start_ts.strftime('%H:%M'),
-                'end_time': end_ts.strftime('%H:%M'),
+                'start_time': str(g.start_time.hour).zfill(2) + ':00',
+                'end_time': str(g.end_time.hour).zfill(2) + ':00',
                 'game_id': g.id
             })
 
         return jsonify(slots)
     except Exception as e:
         app.logger.error(f"get_slots error: {e}")
-        import traceback
-        app.logger.error(traceback.format_exc())
         return jsonify([])
 
 

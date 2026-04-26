@@ -227,7 +227,11 @@ def get_games():
         now = datetime.utcnow()
         app.logger.error(f"get_games: now = {now}")
         
-        games = Game.query.filter(Game.start_time > now).order_by(Game.start_time).all()
+        # Show games starting from 1 hour ago
+        from datetime import timedelta
+        cutoff = now - timedelta(hours=1)
+        
+        games = Game.query.filter(Game.start_time >= cutoff).order_by(Game.start_time).all()
         app.logger.error(f"get_games: found {len(games)} games")
         
         result = []

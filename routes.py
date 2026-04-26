@@ -228,19 +228,26 @@ def create_game():
     current_user = get_user_from_request()
     app.logger.error(f"create_game: current_user = {current_user}")
     if not current_user:
+        app.logger.error("create_game: no user")
         return jsonify({'error': 'Not authenticated'}), 401
 
     data = request.get_json()
-    app.logger.error(f"create_game: data = {data}")
+    app.logger.error(f"create_game: start_time = '{data.get('start_time')}', end_time = '{data.get('end_time')}'")
 
     if current_user.has_created_game():
+        app.logger.error("create_game: user already has game")
         return jsonify({'error': 'Вы уже создали игру. Нельзя создавать больше одной активной игры.'}), 400
 
     try:
-        start_time = datetime.fromisoformat(data['start_time'])
-        end_time = datetime.fromisoformat(data['end_time'])
+        start_time_str = data.get('start_time', '')
+        end_time_str = data.get('end_time', '')
+        
+        # Parse DD.MM.YYYY HH:MM format
+        start_time = datetime.strptime(start_time_str, '%d.%m.%Y %H:%M')
+        end_time = datetime.strptime(end_time_str, '%d.%m.%Y %H:%M')
+        app.logger.error(f"create_game: parsed start={start_time}, end={end_time}")
     except Exception as e:
-        app.logger.error(f"create_game: date parse error: {e}")
+        app.logger.error(f"create_game: date error: {e}")
         return jsonify({'error': 'Неверный формат даты'}), 400
 
     game = Game(

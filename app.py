@@ -154,7 +154,7 @@ def init_db():
 @app.route('/favicon.ico')
 def favicon():
     from flask import send_from_directory
-    return send_from_directory('static', 'favicon.ico')
+    return send_from_directory('public', 'favicon.ico')
 
 
 import routes

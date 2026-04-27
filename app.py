@@ -131,9 +131,11 @@ def init_db():
             try:
                 if 'game' in tables:
                     game_columns = [c['name'] for c in inspector.get_columns('game')]
+                    app.logger.error(f"Current game columns: {game_columns}")
                     if 'game_type' not in game_columns:
                         db.session.execute(text('ALTER TABLE "game" ADD COLUMN game_type VARCHAR(20) DEFAULT \'open\''))
                         db.session.commit()
+                        app.logger.error("Added game_type column")
             except Exception as e:
                 app.logger.error(f"Game migration error: {e}")
             

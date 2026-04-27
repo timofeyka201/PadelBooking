@@ -180,42 +180,192 @@ def logout():
     return jsonify({'success': True})
 
 
-@app.route('/api/games/<int:game_id>/pending')
-def get_pending_players(game_id):
+@app.route('/api/user/me')
+def get_current_user():
+    from app import app
+    user_id = request.headers.get('X-User-ID')
+    app.logger.error(f"/api/user/me: X-User-ID={user_id}")
+    if not user_id:
+        user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user = User.query.get(int(user_id))
+    if not user:
+        app.logger.error(f"/api/user/me: user {user_id} not found")
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    app.logger.error(f"/api/user/me: found user {user.id}, {user.username}")
+    
+    try:
+        has_active = user.has_active_game()
+    except Exception as e:
+        app.logger.error(f"has_active_game error: {e}")
+        has_active = False
+    
+    try:
+        has_created = user.has_created_game()
+    except Exception as e:
+        app.logger.error(f"has_created_game error: {e}")
+        has_created = False
+    
+    return jsonify({
+        'id': user.id,
+        'username': user.username,
+        'first_name': user.first_name,
+        'has_active_game': has_active,
+        'has_created_game': has_created
+    })
+
+
+from datetime import datetime
+
+
+@app.route('/api/games')
+def get_games():
+    try:
+        all_games = Game.query.all()
+        app.logger.error(f"get_games: TOTAL in DB = {len(all_games)}")
+        
+        for g in all_games:
+            app.logger.error(f"  Game {g.id}: {g.title}, start={g.start_time}, creator={g.creator_id}")
+        
+        # Show all unscheduled games regardless of time
+        games = Game.query.filter(Game.status != 'completed').order_by(Game.start_time).all()
+        
+        result = []
+        for g in games:
+            try:
+                result.append({
+                    'id': g.id,
+                    'title': g.title,
+                    'description': g.description or '',
+                    'start_time': g.start_time.strftime('%Y-%m-%dT%H:%M'),
+                    'end_time': g.end_time.strftime('%Y-%m-%dT%H:%M'),
+                    'status': g.status,
+                    'creator': {
+                        'id': g.creator.id,
+                        'username': g.creator.username
+                    },
+                    'player_count': g.get_player_count(),
+                    'is_full': g.is_full(),
+                    'players': [{
+                        'id': p.player.id,
+                        'username': p.player.username,
+                        'team': p.team or 'team_a'
+                    } for p in g.players]
+                })
+            except Exception as e:
+                app.logger.error(f"ERROR: {e}")
+        
+        app.logger.error(f"get_games: returning {len(result)} games")
+        return jsonify(result)
+    except Exception as e:
+        app.logger.error(f"EXCEPTION: {e}")
+        return jsonify([])
+
+
+@app.route('/api/games', methods=['POST'])
+def create_game():
+    from app import app
     current_user = get_user_from_request()
+    app.logger.error(f"create_game: user_id = {current_user}")
     if not current_user:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    game = Game.query.get_or_404(game_id)
-    if game.creator_id != current_user.id:
-        return jsonify({'error': 'Только создатель может видеть заявки'}), 400
+    data = request.get_json()
+    app.logger.error(f"create_game: data = {data}")
+
+    start_time_str = data.get('start_time', '')
+    end_time_str = data.get('end_time', '')
+
+    if not start_time_str or not end_time_str:
+        return jsonify({'error': 'Укажите дату и время'}), 400
 
     try:
-        pending = GamePlayer.query.filter_by(game_id=game_id, approved=False).all()
-    except:
-        pending = []
-    
-    return jsonify([{
-        'id': p.player.id,
-        'username': p.player.username
-    } for p in pending])
+        start_time = datetime.fromisoformat(start_time_str.replace(' ', 'T'))
+        end_time = datetime.fromisoformat(end_time_str.replace(' ', 'T'))
+    except Exception as e:
+        app.logger.error(f"date parse error: {e}")
+        return jsonify({'error': 'Неверный формат даты. Используйте YYYY-MM-DD HH:MM'}), 400
+
+    app.logger.error(f"parsed: start={start_time}, end={end_time}")
+
+    try:
+        game = Game(
+            title=data.get('title') or 'Игра',
+            description=data.get('description', ''),
+            start_time=start_time,
+            end_time=end_time,
+            creator_id=current_user.id
+        )
+        db.session.add(game)
+        db.session.flush()
+        
+        player = GamePlayer(user_id=current_user.id, game_id=game.id, team='creator')
+        db.session.add(player)
+        db.session.commit()
+
+        app.logger.error(f"SUCCESS: game {game.id} created!")
+        return jsonify({'success': True, 'game_id': game.id})
+    except Exception as e:
+        app.logger.error(f"DB error: {e}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/games/<int:game_id>/approve/<int:user_id>', methods=['POST'])
-def approve_player(game_id, user_id):
+@app.route('/api/games/<int:game_id>')
+def get_game(game_id):
+    game = Game.query.get_or_404(game_id)
+    return jsonify({
+        'id': game.id,
+        'title': game.title,
+        'description': game.description or '',
+        'start_time': game.start_time.strftime('%Y-%m-%dT%H:%M:%S'),
+        'end_time': game.end_time.strftime('%Y-%m-%dT%H:%M:%S'),
+        'status': game.status,
+        'creator': {
+            'id': game.creator.id,
+            'username': game.creator.username
+        },
+        'player_count': game.get_player_count(),
+        'is_full': game.is_full(),
+        'players': [{
+            'id': p.player.id,
+            'username': p.player.username,
+            'team': p.team or 'team_a'
+        } for p in game.players]
+    })
+
+
+@app.route('/api/games/<int:game_id>/join', methods=['POST'])
+def join_game(game_id):
     current_user = get_user_from_request()
     if not current_user:
         return jsonify({'error': 'Not authenticated'}), 401
 
     game = Game.query.get_or_404(game_id)
-    if game.creator_id != current_user.id:
-        return jsonify({'error': 'Только создатель может подтвердить игрока'}), 400
 
-    player = GamePlayer.query.filter_by(game_id=game_id, user_id=user_id).first()
-    if not player:
-        return jsonify({'error': 'Игрок не найден'}), 404
+    if game.is_full():
+        return jsonify({'error': 'Игра уже заполнена'}), 400
 
-    player.approved = True
+    existing = GamePlayer.query.filter_by(user_id=current_user.id, game_id=game_id).first()
+    if existing:
+        return jsonify({'error': 'Вы уже участвуете в этой игре'}), 400
+
+    try:
+        has_active = current_user.has_active_game()
+    except:
+        has_active = False
+    
+    if has_active:
+        return jsonify({'error': 'Вы уже участвуете в активной игре'}), 400
+
+    team = 'team_a' if game.players.filter(GamePlayer.team == 'team_a').count() < 2 else 'team_b'
+    player = GamePlayer(user_id=current_user.id, game_id=game_id, team=team)
+    db.session.add(player)
     db.session.commit()
 
     return jsonify({'success': True})

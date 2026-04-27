@@ -295,7 +295,6 @@ def create_game():
         game = Game(
             title=data.get('title') or 'Игра',
             description=data.get('description', ''),
-            game_type=data.get('game_type', 'open'),
             start_time=start_time,
             end_time=end_time,
             creator_id=current_user.id

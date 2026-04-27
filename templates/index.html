@@ -1294,6 +1294,28 @@
             const isCreator = currentUser && game.creator.id === currentUser.id;
 
             document.getElementById('detail-title').textContent = game.title;
+            
+            let pendingHTML = '';
+            if (isCreator) {
+                const pending = game.players.filter(p => !p.approved && p.id !== currentUser.id);
+                if (pending.length > 0) {
+                    pendingHTML = `
+                        <div class="pending-section">
+                            <div class="pending-title">Заявки на вход</div>
+                            ${pending.map(p => `
+                                <div class="pending-item">
+                                    <span>@${escapeHtml(p.username)}</span>
+                                    <div class="pending-actions">
+                                        <button class="pending-approve" onclick="approvePlayer(${id}, ${p.id})">✓</button>
+                                        <button class="pending-reject" onclick="rejectPlayer(${id}, ${p.id})">✗</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+            
             document.getElementById('detail-content').innerHTML = `
                 <div class="detail-info">
                     <div class="detail-row">
@@ -1304,12 +1326,6 @@
                         <span class="detail-label">Тип</span>
                         <span class="detail-value">${game.game_type === 'open' ? 'Открытая' : 'Закрытая'}</span>
                     </div>
-                    ${game.level !== 'all' ? `
-                    <div class="detail-row">
-                        <span class="detail-label">Уровень</span>
-                        <span class="detail-value">${game.level}</span>
-                    </div>
-                    ` : ''}
                     <div class="detail-row">
                         <span class="detail-label">Создатель</span>
                         <span class="detail-value">@${escapeHtml(game.creator.username)}</span>
@@ -1321,7 +1337,7 @@
                     </div>
                     ` : ''}
                 </div>
-                
+                ${pendingHTML}
                 <div class="team-section">
                     <div class="team-box">
                         <h4>Команда A</h4>
@@ -1408,6 +1424,34 @@
                 } catch (e) {
                     showToast('Ошибка');
                 }
+            }
+        }
+
+        async function approvePlayer(gameId, userId) {
+            try {
+                await fetch(API_URL + '/api/games/' + gameId + '/approve/' + userId, { 
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                await loadGames();
+                showDetail(gameId);
+                showToast('Игрок подтверждён');
+            } catch (e) {
+                showToast('Ошибка');
+            }
+        }
+
+        async function rejectPlayer(gameId, userId) {
+            try {
+                await fetch(API_URL + '/api/games/' + gameId + '/reject/' + userId, { 
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                await loadGames();
+                showDetail(gameId);
+                showToast('Игрок отклонён');
+            } catch (e) {
+                showToast('Ошибка');
             }
         }
 

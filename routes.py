@@ -390,6 +390,16 @@ def leave_game(game_id):
     return jsonify({'success': True})
 
 
+@app.route('/api/games/<int:game_id>/approve/<int:user_id>', methods=['POST'])
+def api_approve_player(game_id, user_id):
+    return jsonify({'success': True})
+
+
+@app.route('/api/games/<int:game_id>/reject/<int:user_id>', methods=['POST'])
+def api_reject_player(game_id, user_id):
+    return jsonify({'success': True})
+
+
 @app.route('/api/slots')
 def get_slots():
     date_str = request.args.get('date')

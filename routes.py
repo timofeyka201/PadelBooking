@@ -392,11 +392,41 @@ def leave_game(game_id):
 
 @app.route('/api/games/<int:game_id>/approve/<int:user_id>', methods=['POST'])
 def api_approve_player(game_id, user_id):
+    current_user = get_user_from_request()
+    if not current_user:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    game = Game.query.get_or_404(game_id)
+    if game.creator_id != current_user.id:
+        return jsonify({'error': 'Только создатель может подтвердить игрока'}), 400
+
+    player = GamePlayer.query.filter_by(game_id=game_id, user_id=user_id).first()
+    if not player:
+        return jsonify({'error': 'Игрок не найден'}), 404
+
+    player.approved = True
+    db.session.commit()
+
     return jsonify({'success': True})
 
 
 @app.route('/api/games/<int:game_id>/reject/<int:user_id>', methods=['POST'])
 def api_reject_player(game_id, user_id):
+    current_user = get_user_from_request()
+    if not current_user:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    game = Game.query.get_or_404(game_id)
+    if game.creator_id != current_user.id:
+        return jsonify({'error': 'Только создатель может отклонить игрока'}), 400
+
+    player = GamePlayer.query.filter_by(game_id=game_id, user_id=user_id).first()
+    if not player:
+        return jsonify({'error': 'Игрок не найден'}), 404
+
+    db.session.delete(player)
+    db.session.commit()
+
     return jsonify({'success': True})
 
 

@@ -102,6 +102,7 @@ class GamePlayer(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
     team = db.Column(db.String(20))
+    approved = db.Column(db.Boolean, default=False)
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -125,6 +126,15 @@ def init_db():
                         db.session.commit()
             except Exception as e:
                 app.logger.error(f"Migration error: {e}")
+            
+            try:
+                if 'game_player' in tables:
+                    player_columns = [c['name'] for c in inspector.get_columns('game_player')]
+                    if 'approved' not in player_columns:
+                        db.session.execute(text('ALTER TABLE "game_player" ADD COLUMN approved BOOLEAN DEFAULT false'))
+                        db.session.commit()
+            except Exception as e:
+                app.logger.error(f"GamePlayer migration error: {e}")
             
             db.create_all()
     except Exception as e:

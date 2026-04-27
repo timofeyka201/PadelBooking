@@ -391,7 +391,7 @@ def leave_game(game_id):
 
 
 @app.route('/api/games/<int:game_id>/approve/<int:user_id>', methods=['POST'])
-def approve_player(game_id, user_id):
+def api_approve_player(game_id, user_id):
     current_user = get_user_from_request()
     if not current_user:
         return jsonify({'error': 'Not authenticated'}), 401
@@ -411,7 +411,7 @@ def approve_player(game_id, user_id):
 
 
 @app.route('/api/games/<int:game_id>/reject/<int:user_id>', methods=['POST'])
-def reject_player(game_id, user_id):
+def api_reject_player(game_id, user_id):
     current_user = get_user_from_request()
     if not current_user:
         return jsonify({'error': 'Not authenticated'}), 401

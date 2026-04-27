@@ -82,6 +82,7 @@ class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    game_type = db.Column(db.String(20), default='open')
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default='scheduled')
@@ -126,6 +127,15 @@ def init_db():
                         db.session.commit()
             except Exception as e:
                 app.logger.error(f"Migration error: {e}")
+            
+            try:
+                if 'game' in tables:
+                    game_columns = [c['name'] for c in inspector.get_columns('game')]
+                    if 'game_type' not in game_columns:
+                        db.session.execute(text('ALTER TABLE "game" ADD COLUMN game_type VARCHAR(20) DEFAULT \'open\''))
+                        db.session.commit()
+            except Exception as e:
+                app.logger.error(f"Game migration error: {e}")
             
             try:
                 if 'game_player' in tables:

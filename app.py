@@ -82,6 +82,7 @@ class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    game_type = db.Column(db.String(20), default='open')  # open or closed
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default='scheduled')
@@ -102,6 +103,7 @@ class GamePlayer(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
     team = db.Column(db.String(20))
+    approved = db.Column(db.Boolean, default=False)
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -126,27 +128,23 @@ def init_db():
             except Exception as e:
                 app.logger.error(f"Migration error: {e}")
             
-            if 'game' in tables:
-                try:
+            try:
+                if 'game' in tables:
                     game_columns = [c['name'] for c in inspector.get_columns('game')]
-                    app.logger.error(f"Game columns: {game_columns}")
-                    if 'level' not in game_columns:
-                        db.session.execute(text('ALTER TABLE "game" ADD COLUMN level VARCHAR(10)'))
-                        db.session.commit()
                     if 'game_type' not in game_columns:
-                        db.session.execute(text('ALTER TABLE "game" ADD COLUMN game_type VARCHAR(20)'))
+                        db.session.execute(text('ALTER TABLE "game" ADD COLUMN game_type VARCHAR(20) DEFAULT \'open\''))
                         db.session.commit()
-                except Exception as e:
-                    app.logger.error(f"Game migration error: {e}")
+            except Exception as e:
+                app.logger.error(f"Game migration error: {e}")
             
-            if 'game_player' in tables:
-                try:
+            try:
+                if 'game_player' in tables:
                     player_columns = [c['name'] for c in inspector.get_columns('game_player')]
                     if 'approved' not in player_columns:
-                        db.session.execute(text('ALTER TABLE "game_player" ADD COLUMN approved BOOLEAN'))
+                        db.session.execute(text('ALTER TABLE "game_player" ADD COLUMN approved BOOLEAN DEFAULT 0'))
                         db.session.commit()
-                except Exception as e:
-                    app.logger.error(f"GamePlayer migration error: {e}")
+            except Exception as e:
+                app.logger.error(f"GamePlayer migration error: {e}")
             
             db.create_all()
     except Exception as e:
